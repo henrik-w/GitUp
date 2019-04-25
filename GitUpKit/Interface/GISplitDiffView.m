@@ -554,20 +554,19 @@ typedef NS_ENUM(NSUInteger, SelectionMode) {
       }
     }
   }
-  if (oldLines) {
-    *oldLines = [NSMutableIndexSet indexSet];
-  }
-  if (newLines) {
-    *newLines = [NSMutableIndexSet indexSet];
-  }
-  if (oldLines || newLines) {
-    [_selectedLines enumerateIndexesUsingBlock:^(NSUInteger index, BOOL* stop) {
-      if (_rightSelection) {
-        [(NSMutableIndexSet*)*newLines addIndex:index];
-      } else {
-        [(NSMutableIndexSet*)*oldLines addIndex:index];
-      }
-    }];
+
+  if (nil != oldLines || nil != newLines) {
+    NSMutableIndexSet* tempOldLines = [NSMutableIndexSet indexSet];
+    NSMutableIndexSet* tempNewLines = [NSMutableIndexSet indexSet];
+
+    [_rightSelection? tempNewLines : tempOldLines addIndexes:_selectedLines];
+
+    if (nil != oldLines) {
+      *oldLines = tempOldLines;
+    }
+    if (nil != newLines) {
+      *newLines = tempNewLines;
+    }
   }
 }
 

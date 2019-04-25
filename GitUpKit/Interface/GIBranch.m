@@ -25,15 +25,15 @@
   return _mainLine.nodes[0];
 }
 
-- (NSArray*)localBranches {
+- (NSArray<GCHistoryLocalBranch*>*)localBranches {
   return self.tipNode.commit.localBranches;
 }
 
-- (NSArray*)remoteBranches {
+- (NSArray<GCHistoryRemoteBranch*>*)remoteBranches {
   return self.tipNode.commit.remoteBranches;
 }
 
-- (NSArray*)tags {
+- (NSArray<GCHistoryTag*>*)tags {
   return self.tipNode.commit.tags;
 }
 

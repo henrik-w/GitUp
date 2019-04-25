@@ -20,41 +20,45 @@
 #import "GIPrivate.h"
 
 @implementation GILayer {
-  CFMutableArrayRef _nodes;
-  CFMutableArrayRef _lines;
+  NSMutableArray<GINode*>* _nodes;
+  NSMutableArray<GILine*>* _lines;
 }
 
 - (instancetype)initWithIndex:(NSUInteger)index {
   if ((self = [super init])) {
     _index = index;
 
-    _nodes = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
-    _lines = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+    _nodes = [[NSMutableArray arrayWithCapacity:0] retain];
+    _lines = [[NSMutableArray arrayWithCapacity:0] retain];
   }
   return self;
 }
 
 - (void)dealloc {
-  CFRelease(_lines);
-  CFRelease(_nodes);
+  if (nil != _lines) {
+    [_lines release];
+  }
+  if (nil != _nodes) {
+    [_nodes release];
+  }
 
   [super dealloc];
 }
 
-- (NSArray*)nodes {
-  return (NSArray*)_nodes;
+- (NSArray<GINode*>*)nodes {
+  return _nodes;
 }
 
-- (NSArray*)lines {
-  return (NSArray*)_lines;
+- (NSArray<GILine*>*)lines {
+  return _lines;
 }
 
 - (void)addNode:(GINode*)node {
-  CFArrayAppendValue(_nodes, (const void*)node);
+  [_nodes addObject:node];
 }
 
 - (void)addLine:(GILine*)line {
-  CFArrayAppendValue(_lines, (const void*)line);
+  [_lines addObject:line];
 }
 
 - (NSString*)description {

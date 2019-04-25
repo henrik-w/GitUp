@@ -20,33 +20,28 @@
 #import "GCPrivate.h"
 
 @implementation GCOrderedSet {
-  NSMutableArray* _objects;  // Contains all the objects, even removed ones
-  CFMutableSetRef _actualObjectHashes;  // Objects that were added but have not been removed
-  CFMutableSetRef _removedObjectHashes;
+  NSMutableArray<GCObject*>* _objects;  // Contains all the objects, even removed ones
+  NSMutableSet<NSString*>* _actualObjectHashes;  // Objects that were added but have not been removed
+  NSMutableSet<NSString*>* _removedObjectHashes;
 }
 
 - (instancetype)init {
-  if ((self = [super init])) {
-    _objects = [[NSMutableArray alloc] init];
-    _actualObjectHashes = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
-    _removedObjectHashes = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
+  if (nil != (self = [super init])) {
+    _objects = [NSMutableArray array];
+    _actualObjectHashes = [NSMutableSet set];
+    _removedObjectHashes = [NSMutableSet set];
   }
   return self;
 }
 
-- (void)dealloc {
-  CFRelease(_actualObjectHashes);
-  CFRelease(_removedObjectHashes);
-}
-
 - (void)addObject:(GCObject*)object {
   if (![self containsObject:object]) {
-    if (CFSetContainsValue(_removedObjectHashes, (__bridge const void*)(object.SHA1))) {
-      CFSetRemoveValue(_removedObjectHashes, (__bridge const void*)(object.SHA1));
+    if ([_removedObjectHashes containsObject:object.SHA1]) {
+      [_removedObjectHashes removeObject:object.SHA1];
     } else {
       [_objects addObject:object];
     }
-    CFSetAddValue(_actualObjectHashes, (__bridge const void*)(object.SHA1));
+    [_actualObjectHashes addObject:object.SHA1];
   }
 }
 
@@ -54,17 +49,17 @@
   if ([self containsObject:object]) {
     // Removing object from NSMutableArray is expensive,
     // so we just moving SHA from one set to another.
-    CFSetRemoveValue(_actualObjectHashes, (__bridge const void*)(object.SHA1));
-    CFSetAddValue(_removedObjectHashes, (__bridge const void*)(object.SHA1));
+    [_actualObjectHashes removeObject:object.SHA1];
+    [_removedObjectHashes addObject:object.SHA1];
   }
 }
 
 - (BOOL)containsObject:(GCObject*)object {
-  return CFSetContainsValue(_actualObjectHashes, (__bridge const void*)(object.SHA1));
+  return [_actualObjectHashes containsObject:object.SHA1];
 }
 
-- (NSArray*)objects {
-  NSMutableArray* result = [[NSMutableArray alloc] initWithCapacity:_objects.count];
+- (NSArray<GCObject*>*)objects {
+  NSMutableArray<GCObject*>* result = [NSMutableArray arrayWithCapacity:_objects.count];
   for (GCObject* object in _objects) {
     if ([self containsObject:object]) {  // Return only objects that were not removed
       [result addObject:object];

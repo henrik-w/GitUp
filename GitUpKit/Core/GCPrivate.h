@@ -220,8 +220,8 @@ extern int git_submodule_foreach_block(git_repository* repo, int (^block)(git_su
 @end
 
 @interface GCSnapshot ()
-@property(nonatomic, readonly) NSDictionary* config;
-@property(nonatomic, readonly) NSArray* serializedReferences;
+@property(nonatomic, readonly) NSDictionary<NSString *, NSString *>* config;
+@property(nonatomic, readonly) NSArray<GCSerializedReference*>* serializedReferences;
 - (id)initWithRepository:(GCRepository*)repository error:(NSError**)error;
 - (GCSerializedReference*)serializedReferenceWithName:(const char*)name;
 @end

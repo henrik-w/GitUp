@@ -227,9 +227,9 @@ static BOOL _CompareSerializedReferences(GCSerializedReference* serializedRefere
 @end
 
 @implementation GCSnapshot {
-  NSMutableDictionary* _config;
-  NSMutableArray* _serializedReferences;
-  NSMutableDictionary* _info;
+  NSMutableDictionary<NSString *, NSString *>* _config;
+  NSMutableArray<GCSerializedReference*>* _serializedReferences;
+  NSMutableDictionary<NSString *, id>* _info;
 }
 
 + (BOOL)supportsSecureCoding {
@@ -308,10 +308,18 @@ cleanup:
 }
 
 - (void)dealloc {
-  CFRelease(_cache);
-  [_info release];
-  [_serializedReferences release];
-  [_config release];
+  if (NULL != _cache) {
+    CFRelease(_cache);
+  }
+  if (nil != _info) {
+    [_info release];
+  }
+  if (nil != _serializedReferences) {
+    [_serializedReferences release];
+  }
+  if (nil != _config) {
+    [_config release];
+  }
 
   [super dealloc];
 }
@@ -634,11 +642,11 @@ cleanup:
           reflogMessage:(NSString*)message
     didUpdateReferences:(BOOL*)didUpdateReferences
                   error:(NSError**)error {
-  NSMutableDictionary* config = _LoadRepositoryConfig(self, error);
+  NSMutableDictionary<NSString*, id>* config = _LoadRepositoryConfig(self, error);
   if (config == nil) {
     return NO;
   }
-  NSMutableArray* references = [[NSMutableArray alloc] init];
+  NSMutableArray<GCSerializedReference*>* references = [NSMutableArray array];
   BOOL result = [self enumerateReferencesWithOptions:kGCReferenceEnumerationOption_IncludeHEAD
                                                error:error
                                           usingBlock:^BOOL(git_reference* reference) {
@@ -650,7 +658,6 @@ cleanup:
   if (result) {
     result = [self _restoreFromReferences:references andConfig:config toSnapshot:snapshot withOptions:options reflogMessage:message didUpdateReferences:didUpdateReferences error:error];
   }
-  [references release];
   return result;
 }
 

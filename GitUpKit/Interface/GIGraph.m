@@ -25,20 +25,19 @@
 
 #define kStaleBranchInterval (60 * 24 * 3600)  // 60 days
 
-#define COMMIT_SKIPPED(c) skipped[c.autoIncrementID]
 #define MAP_COMMIT_TO_NODE(c) _mapping[c.autoIncrementID]
 
 @implementation GIGraph {
   GINode** _mapping;
-  CFMutableArrayRef _branches;
-  CFMutableArrayRef _layers;
-  CFMutableArrayRef _lines;
-  CFMutableArrayRef _nodes;
-  CFMutableArrayRef _nodesWithReferences;
+  NSMutableArray<GIBranch*>* _branches;
+  NSMutableArray<GILayer*>* _layers;
+  NSMutableArray<GILine*>* _lines;
+  NSMutableArray<GINode*>* _nodes;
+  NSMutableArray<GINode*>* _nodesWithReferences;
 }
 
 static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
-  [(id)value release];
+  CFRelease(value);
 }
 
 - (instancetype)initWithHistory:(GCHistory*)history options:(GIGraphOptions)options {
@@ -46,12 +45,19 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
     _history = [history retain];
     _options = options;
 
-    CFArrayCallBacks callbacks = {0, NULL, _ReleaseCallBack, NULL, NULL};
-    _branches = CFArrayCreateMutable(kCFAllocatorDefault, 0, &callbacks);
-    _layers = CFArrayCreateMutable(kCFAllocatorDefault, 0, &callbacks);
-    _lines = CFArrayCreateMutable(kCFAllocatorDefault, 0, &callbacks);
-    _nodes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &callbacks);
-    _nodesWithReferences = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+    const CFArrayCallBacks callbacks = {0, NULL, _ReleaseCallBack, NULL, NULL};
+
+    _branches = (NSMutableArray *)CFArrayCreateMutable(kCFAllocatorDefault, 0, &callbacks);
+    [_branches retain];
+    _layers = (NSMutableArray *)CFArrayCreateMutable(kCFAllocatorDefault, 0, &callbacks);
+    [_layers retain];
+    _lines = (NSMutableArray *)CFArrayCreateMutable(kCFAllocatorDefault, 0, &callbacks);
+    [_lines retain];
+    _nodes = (NSMutableArray *)CFArrayCreateMutable(kCFAllocatorDefault, 0, &callbacks);
+    [_nodes retain];
+    _nodesWithReferences = [[NSMutableArray array] retain];
+
+
     _mapping = calloc(_history.nextAutoIncrementID, sizeof(GINode*));
 
     [self _generateGraph];
@@ -71,40 +77,55 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
 }
 
 - (void)dealloc {
-  free(_mapping);
-  CFRelease(_nodesWithReferences);
-  CFRelease(_nodes);
-  CFRelease(_lines);
-  CFRelease(_layers);
-  CFRelease(_branches);
+  if (NULL != _mapping) {
+    free(_mapping);
+  }
 
-  [_history release];
+  if (nil != _nodesWithReferences) {
+    [_nodesWithReferences release];
+  }
+  if (nil != _nodes) {
+    [_nodes release];
+  }
+  if (nil != _lines) {
+    [_lines release];
+  }
+  if (nil != _layers) {
+    [_layers release];
+  }
+  if (nil != _branches) {
+    [_branches release];
+  }
+
+  if (nil != _history) {
+    [_history release];
+  }
 
   [super dealloc];
 }
 
-- (NSArray*)branches {
-  return (NSArray*)_branches;
+- (NSArray<GIBranch*>*)branches {
+  return _branches;
 }
 
-- (NSArray*)layers {
-  return (NSArray*)_layers;
+- (NSArray<GILayer*>*)layers {
+  return _layers;
 }
 
-- (NSArray*)lines {
-  return (NSArray*)_lines;
+- (NSArray<GILine*>*)lines {
+  return _lines;
 }
 
-- (NSArray*)nodes {
-  return (NSArray*)_nodes;
+- (NSArray<GINode*>*)nodes {
+  return _nodes;
 }
 
-- (NSArray*)nodesWithReferences {
-  return (NSArray*)_nodesWithReferences;
+- (NSArray<GINode*>*)nodesWithReferences {
+  return _nodesWithReferences;
 }
 
 - (BOOL)isEmpty {
-  return !CFArrayGetCount(_layers);
+  return [_layers count] == 0;
 }
 
 - (void)_generateGraph {
@@ -117,6 +138,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
   if (_options & (kGIGraphOption_SkipStaleBranchTips | kGIGraphOption_SkipStandaloneTagTips | kGIGraphOption_SkipStandaloneRemoteBranchTips)) {
     skipped = calloc(_history.nextAutoIncrementID, sizeof(BOOL));
   }
+  assert(NULL != skipped);
   GCHistoryCommit* headCommit = _history.HEADCommit;
 
   // Add HEAD first to tips
@@ -149,7 +171,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
 
   // Add leaf tags
   for (GCHistoryTag* tag in _history.tags) {
-    if (tag.commit.leaf) {
+    if ([tag.commit isLeaf]) {
       [tips addObject:tag.commit];
     }
   }
@@ -163,9 +185,9 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
       GCHistoryCommit* commit = branch.tipCommit;
       if ((commit.timeIntervalSinceReferenceDate < staleTime) && ![headCommit isEqualToCommit:commit]) {
         [tips removeObject:commit];
-        if (commit.leaf && !COMMIT_SKIPPED(commit)) {
+        if (commit.leaf && !skipped[commit.autoIncrementID]) {
           GC_POINTER_LIST_APPEND(skipList, commit);
-          COMMIT_SKIPPED(commit) = YES;
+          skipped[commit.autoIncrementID] = YES;
         }
       }
     }
@@ -173,9 +195,9 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
       GCHistoryCommit* commit = branch.tipCommit;
       if ((commit.timeIntervalSinceReferenceDate < staleTime) && ![headCommit isEqualToCommit:commit]) {
         [tips removeObject:commit];
-        if (commit.leaf && !COMMIT_SKIPPED(commit)) {
+        if (commit.leaf && !skipped[commit.autoIncrementID]) {
           GC_POINTER_LIST_APPEND(skipList, commit);
-          COMMIT_SKIPPED(commit) = YES;
+          skipped[commit.autoIncrementID] = YES;
         }
       }
     }
@@ -188,9 +210,9 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
       if (commit.leaf && !commit.localBranches && ![headCommit isEqualToCommit:commit]) {
         if (!commit.remoteBranches || (_options & kGIGraphOption_SkipStandaloneRemoteBranchTips)) {
           [tips removeObject:commit];
-          if (!COMMIT_SKIPPED(commit)) {
+          if (!skipped[commit.autoIncrementID]) {
             GC_POINTER_LIST_APPEND(skipList, commit);
-            COMMIT_SKIPPED(commit) = YES;
+            skipped[commit.autoIncrementID] = YES;
           }
         }
       }
@@ -205,9 +227,9 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
         if (!commit.tags || (_options & kGIGraphOption_SkipStandaloneTagTips)) {
           if (!(_options & kGIGraphOption_PreserveUpstreamRemoteBranchTips) || ![upstreamTips containsObject:commit]) {
             [tips removeObject:commit];
-            if (commit.leaf && !COMMIT_SKIPPED(commit)) {
+            if (commit.leaf && !skipped[commit.autoIncrementID]) {
               GC_POINTER_LIST_APPEND(skipList, commit);
-              COMMIT_SKIPPED(commit) = YES;
+              skipped[commit.autoIncrementID] = YES;
             }
           }
         }
@@ -222,7 +244,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
       GC_POINTER_LIST_FOR_LOOP(skipList, GCHistoryCommit*, commit) {
         for (GCHistoryCommit* parent in commit.parents) {
           // Check if commit was already skipped
-          if (COMMIT_SKIPPED(parent)) {
+          if (skipped[parent.autoIncrementID]) {
             continue;
           }
 
@@ -237,7 +259,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
               if (parent.localBranches) {
                 BOOL resuscitate = YES;
                 for (GCHistoryCommit* child in parent.children) {
-                  if (!COMMIT_SKIPPED(child)) {
+                  if (!skipped[child.autoIncrementID]) {
                     resuscitate = NO;
                     break;
                   }
@@ -250,7 +272,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
               if (parent.remoteBranches && !(_options & kGIGraphOption_SkipStandaloneRemoteBranchTips)) {
                 BOOL resuscitate = YES;
                 for (GCHistoryCommit* child in parent.children) {
-                  if (!COMMIT_SKIPPED(child)) {
+                  if (!skipped[child.autoIncrementID]) {
                     resuscitate = NO;
                     break;
                   }
@@ -271,7 +293,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
           // A commit can be skipped if all its children are skipped
           BOOL skip = YES;
           for (GCHistoryCommit* child in parent.children) {
-            skip = COMMIT_SKIPPED(child);
+            skip = skipped[child.autoIncrementID];
             if (!skip) {
               break;
             }
@@ -282,7 +304,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
             XLOG_DEBUG_CHECK(!updateTips || ![tips containsObject:parent]);
             XLOG_DEBUG_CHECK(!GC_POINTER_LIST_CONTAINS(newSkipList, parent));
             GC_POINTER_LIST_APPEND(newSkipList, parent);
-            COMMIT_SKIPPED(parent) = YES;
+            skipped[parent.autoIncrementID] = YES;
           }
         }
       }
@@ -315,19 +337,19 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
   }
 
   // Create initial layer made of tips
-  GILayer* layer = [[GILayer alloc] initWithIndex:CFArrayGetCount(_layers)];
+  GILayer* layer = [[GILayer alloc] initWithIndex:[_layers count]];
   @autoreleasepool {
     for (GCHistoryCommit* commit in tipsArray) {
       // Create new branch
       GIBranch* branch = [[GIBranch alloc] init];
-      CFArrayAppendValue(_branches, branch);
+      [_branches addObject:branch];
 #ifdef __clang_analyzer__
       [branch release];  // Release is actually handled by CFArray which doesn't retain
 #endif
 
       // Create new line
       GILine* line = [[GILine alloc] initWithBranch:branch];
-      CFArrayAppendValue(_lines, line);
+      [_lines addObject:line];
       branch.mainLine = line;
       [layer addLine:line];
 #ifdef __clang_analyzer__
@@ -335,13 +357,12 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
 #endif
 
       // Create new node
-      GINode* node;
       BOOL ready = YES;
       if (!commit.leaf) {
         // If skipping commits, a tip is ready only if all its children are skipped
         if (skipped) {
           for (GCHistoryCommit* child in commit.children) {
-            if (!COMMIT_SKIPPED(child)) {
+            if (!skipped[child.autoIncrementID]) {
               ready = NO;
               break;
             }
@@ -352,6 +373,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
           ready = NO;
         }
       }
+      GINode* node = nil;
       if (ready) {
         node = [[GINode alloc] initWithLayer:layer primaryLine:line commit:commit dummy:NO alternateCommit:nil];
         MAP_COMMIT_TO_NODE(commit) = node;  // Associate node with commit
@@ -359,12 +381,12 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
         node = [[GINode alloc] initWithLayer:layer primaryLine:line commit:commit dummy:YES alternateCommit:nil];
         ++_numberOfDummyNodes;
       }
-      CFArrayAppendValue(_nodes, node);
+      [_nodes addObject:[node autorelease]];
       [layer addNode:node];
       [line addNode:node];
     }
   }
-  CFArrayAppendValue(_layers, layer);
+  [_layers addObject:layer];
 #ifdef __clang_analyzer__
   [layer release];
 #endif
@@ -374,7 +396,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
   while (1) {
     @autoreleasepool {
       // Create a new empty layer
-      layer = [[GILayer alloc] initWithIndex:CFArrayGetCount(_layers)];
+      layer = [[GILayer alloc] initWithIndex:[_layers count]];
 
       // Iterate over nodes from previous layer
       for (GINode* previousNode in previousLayer.nodes) {
@@ -384,7 +406,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
           // Check if this commit is "ready" to be a node i.e. all its children have non-dummy nodes associated (but not on the current layer)
           BOOL ready = YES;
           for (GCHistoryCommit* child in commit.children) {
-            if (skipped && COMMIT_SKIPPED(child)) {
+            if (skipped && skipped[child.autoIncrementID]) {
               continue;
             }
             GINode* node = MAP_COMMIT_TO_NODE(child);
@@ -403,7 +425,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
             node = [[GINode alloc] initWithLayer:layer primaryLine:line commit:commit dummy:YES alternateCommit:alternateCommit];
             ++_numberOfDummyNodes;
           }
-          CFArrayAppendValue(_nodes, node);
+          [_nodes addObject:node];
           [layer addNode:node];
           [line addNode:node];
 
@@ -414,7 +436,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
         GCHistoryCommit* commit = previousNode.commit;
         GILine* line = previousNode.primaryLine;
         if (previousNode.dummy) {
-          XLOG_DEBUG_CHECK(!skipped || !COMMIT_SKIPPED(commit));
+          XLOG_DEBUG_CHECK(!skipped || !skipped[commit.autoIncrementID]);
           GINode* node = MAP_COMMIT_TO_NODE(commit);  // Check if commit has already been reprocessed
           if (node) {
             XLOG_DEBUG_CHECK(node.layer == layer);
@@ -429,12 +451,12 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
         else {
           NSUInteger index = 0;
           for (GCHistoryCommit* parent in commit.parents) {
-            XLOG_DEBUG_CHECK(!skipped || !COMMIT_SKIPPED(parent));
+            XLOG_DEBUG_CHECK(!skipped || !skipped[parent.autoIncrementID]);
             GINode* node = MAP_COMMIT_TO_NODE(parent);  // Check if commit has already been processed
             GILine* parentLine = line;
             if (index) {  // Start a new line if not the first parent
               GILine* newLine = [[GILine alloc] initWithBranch:line.branch];
-              CFArrayAppendValue(_lines, newLine);
+              [_lines addObject:newLine];
 #ifdef __clang_analyzer__
               [newLine release];
 #endif
@@ -455,7 +477,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
 
           // Cache node if it has references
           if (commit.hasReferences) {
-            CFArrayAppendValue(_nodesWithReferences, previousNode);
+            [_nodesWithReferences addObject:previousNode];
           }
         }
       }
@@ -479,7 +501,7 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
 #endif
 
       // Save new layer
-      CFArrayAppendValue(_layers, layer);
+      [_layers addObject:layer];
 #ifdef __clang_analyzer__
       [layer release];
 #endif
@@ -499,13 +521,11 @@ cleanup:
 
 - (void)_computeNodePositions {
   CGFloat maxX = 0.0;
-  for (CFIndex i = 0, count = CFArrayGetCount(_layers); i < count; ++i) {
-    GILayer* layer = CFArrayGetValueAtIndex(_layers, i);
-
+  for (GILayer* layer in _layers) {
     CGFloat lastX = 0.0;
     NSUInteger index = 0;
     for (GINode* node in layer.nodes) {
-      if (index) {
+      if (0 != index) {
         CGFloat x = node.primaryLine.x;
         if (node.primaryLine.branchMainLine) {
           lastX += 2;
@@ -523,7 +543,7 @@ cleanup:
 
     layer.y = layer.index;
   }
-  _size = CGSizeMake(maxX, CFArrayGetCount(_layers) - 1);
+  _size = CGSizeMake(maxX, [_layers count] - 1);
 }
 
 #if __GI_HAS_APPKIT__
@@ -566,8 +586,7 @@ cleanup:
   CFRelease(dictionary);
 #else
   NSUInteger index = 0;
-  for (CFIndex i = 0, count = CFArrayGetCount(_lines); i < count; ++i) {
-    GILine* line = CFArrayGetValueAtIndex(_lines, i);
+  for (GILine* line in _lines) {
     NSColor* color;
     do {
       color = colors[index];
@@ -586,8 +605,7 @@ cleanup:
 
 - (void)_validateTopology {
   // Validate nodes - TODO: Find a way to validate "alternateCommit"
-  for (CFIndex i = 0, count = CFArrayGetCount(_nodes); i < count; ++i) {
-    GINode* node = CFArrayGetValueAtIndex(_nodes, i);
+  for (GINode* node in _nodes) {
     XLOG_DEBUG_CHECK(node.layer);
     XLOG_DEBUG_CHECK(node.primaryLine);
     XLOG_DEBUG_CHECK(node.commit);
@@ -595,10 +613,9 @@ cleanup:
   }
 
   // Validate lines
-  for (CFIndex i = 0, count = CFArrayGetCount(_lines); i < count; ++i) {
-    GILine* line = CFArrayGetValueAtIndex(_lines, i);
+  for (GILine* line in _lines) {
     XLOG_DEBUG_CHECK(line.branch);
-    NSArray* nodes = line.nodes;
+    NSArray<GINode*>* nodes = line.nodes;
     XLOG_DEBUG_CHECK(nodes.count >= 1);
     XLOG_DEBUG_CHECK(![(GINode*)nodes.firstObject isDummy] || ![[(GINode*)nodes.firstObject commit] isLeaf]);
     XLOG_DEBUG_CHECK(![(GINode*)nodes.lastObject isDummy]);
@@ -615,16 +632,15 @@ cleanup:
   }
 
   // Validate branches
-  for (CFIndex i = 0, count = CFArrayGetCount(_branches); i < count; ++i) {
-    GIBranch* branch = CFArrayGetValueAtIndex(_branches, i);
+  for (GIBranch* branch in _branches) {
     XLOG_DEBUG_CHECK(branch.mainLine);
     XLOG_DEBUG_CHECK(branch.mainLine.branch == branch);
   }
 
   // Validate layers - TODO: Find a way to validate lines in layers
-  for (CFIndex i = 0, count = CFArrayGetCount(_layers); i < count; ++i) {
-    GILayer* layer = CFArrayGetValueAtIndex(_layers, i);
-    XLOG_DEBUG_CHECK(layer.index == (NSUInteger)i);
+  NSUInteger i = 0;
+  for (GILayer* layer in _layers) {
+    XLOG_DEBUG_CHECK(layer.index == i++);
     XLOG_DEBUG_CHECK(layer.nodes.count >= 1);
     XLOG_DEBUG_CHECK([[NSSet setWithArray:layer.lines] count] == layer.lines.count);
   }
@@ -638,9 +654,8 @@ cleanup:
   }
 
   // Make sure all commits have a non-dummy node associated and that there are no orphan non-dummy nodes
-  NSMutableSet* orphanNodes = [NSMutableSet setWithCapacity:CFArrayGetCount(_nodes)];
-  for (CFIndex i = 0, count = CFArrayGetCount(_nodes); i < count; ++i) {
-    GINode* node = CFArrayGetValueAtIndex(_nodes, i);
+  NSMutableSet* orphanNodes = [NSMutableSet setWithCapacity:[_nodes count]];
+  for (GINode* node in _nodes) {
     if (!node.dummy) {
       [orphanNodes addObject:node];
     }
@@ -656,25 +671,22 @@ cleanup:
   XLOG_DEBUG_CHECK(orphanNodes.count == 0);
 
   // Make sure global node list matches all line nodes
-  NSMutableSet* lineNodes = [NSMutableSet setWithCapacity:CFArrayGetCount(_nodes)];
-  for (CFIndex i = 0, count = CFArrayGetCount(_lines); i < count; ++i) {
-    GILine* line = CFArrayGetValueAtIndex(_lines, i);
+  NSMutableSet* lineNodes = [NSMutableSet setWithCapacity:[_nodes count]];
+  for (GILine* line in _lines) {
     [lineNodes addObjectsFromArray:line.nodes];
   }
-  XLOG_DEBUG_CHECK([lineNodes isEqualToSet:[NSSet setWithArray:(NSArray*)_nodes]]);
+  XLOG_DEBUG_CHECK([lineNodes isEqualToSet:[NSSet setWithArray:_nodes]]);
 
   // Make sure global node list matches all layer nodes
-  NSMutableSet* layerNodes = [NSMutableSet setWithCapacity:CFArrayGetCount(_nodes)];
-  for (CFIndex i = 0, count = CFArrayGetCount(_layers); i < count; ++i) {
-    GILayer* layer = CFArrayGetValueAtIndex(_layers, i);
+  NSMutableSet<GINode*>* layerNodes = [NSMutableSet setWithCapacity:[_nodes count]];
+  for (GILayer* layer in _layers) {
     [layerNodes addObjectsFromArray:layer.nodes];
   }
-  XLOG_DEBUG_CHECK([layerNodes isEqualToSet:[NSSet setWithArray:(NSArray*)_nodes]]);
+  XLOG_DEBUG_CHECK([layerNodes isEqualToSet:[NSSet setWithArray:_nodes]]);
 
   // Make sure all lines are a hierarchy of nodes and end with a non-dummy node
-  for (CFIndex i = 0, count = CFArrayGetCount(_lines); i < count; ++i) {
-    GILine* line = CFArrayGetValueAtIndex(_lines, i);
-    NSArray* nodes = line.nodes;
+  for (GILine* line in _lines) {
+    NSArray<GINode*>* nodes = line.nodes;
     NSUInteger index = 0;
     while ([nodes[index] isDummy] && (index < nodes.count - 1)) {
       ++index;
@@ -694,9 +706,8 @@ cleanup:
 
 - (void)_validateStyle {
   // Make sure there are no duplicate node positions
-  for (CFIndex i = 0, count = CFArrayGetCount(_layers); i < count; ++i) {
-    GILayer* layer = CFArrayGetValueAtIndex(_layers, i);
-    NSMutableSet* set = [NSMutableSet set];
+  for (GILayer* layer in _layers) {
+    NSMutableSet<NSNumber*>* set = [NSMutableSet set];
     for (GINode* node in layer.nodes) {
       [set addObject:@(node.x)];
     }
@@ -717,8 +728,7 @@ cleanup:
   }
 
   // Make sure all lines have a color and their nodes are laid out upwards
-  for (CFIndex i = 0, count = CFArrayGetCount(_lines); i < count; ++i) {
-    GILine* line = CFArrayGetValueAtIndex(_lines, i);
+  for (GILine* line in _lines) {
 #if __GI_HAS_APPKIT__
     XLOG_DEBUG_CHECK(line.color);
 #endif
@@ -760,14 +770,14 @@ cleanup:
   GC_POINTER_LIST_ALLOCATE(tempRow, 32);
 
   __block CFIndex index = node.layer.index;
-  CFIndex maxIndex = CFArrayGetCount(_layers);
+  CFIndex maxIndex = [_layers count];
   GC_POINTER_LIST_APPEND(row, node);
   while (1) {
     ++index;
     if (index == maxIndex) {
       break;
     }
-    GILayer* layer = CFArrayGetValueAtIndex(_layers, index);
+    GILayer* layer = [_layers objectAtIndex:index];
     if (beginBlock) {
       BOOL stop = NO;
       beginBlock(layer, &stop);
@@ -810,8 +820,7 @@ cleanup:
 
 - (NSString*)description {
   NSMutableString* description = [[NSMutableString alloc] initWithString:[super description]];
-  for (CFIndex i = 0, count = CFArrayGetCount(_layers); i < count; ++i) {
-    GILayer* layer = CFArrayGetValueAtIndex(_layers, i);
+  for (GILayer* layer in _layers) {
     [description appendFormat:@"\nLayer %lu", (unsigned long)layer.index];
     for (GINode* node in layer.nodes) {
       [description appendFormat:@"\n [%c] %@ \"%@\" (%@)", node.dummy ? ' ' : 'X', node.commit.shortSHA1, node.commit.summary, node.alternateCommit.shortSHA1];

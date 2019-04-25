@@ -28,7 +28,7 @@
  * It makes a copy of internal storage, filtered by existing objects.
  * Try to store the value somewhere else and don't access this property if you don't have to.
  */
-@property(nonatomic, readonly) NSArray* objects;
+@property(nonatomic, readonly) NSArray<GCObject*>* objects;
 
 /**
  * NOTE: Usually it is unnecessary to add an object, then remove it, then add it again.

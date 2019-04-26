@@ -74,7 +74,7 @@ static inline BOOL _EqualObjects(GCObject* object1, GCObject* object2) {
 }
 
 - (BOOL)isEqual:(id)object {
-  if (![object isKindOfClass:[GCObject class]]) {
+  if (![(NSObject *)object isKindOfClass:[GCObject class]]) {
     return NO;
   }
   return _EqualObjects(self, object);

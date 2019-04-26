@@ -117,7 +117,7 @@ static inline BOOL _EqualConflicts(GCIndexConflict* conflict1, GCIndexConflict* 
 }
 
 - (BOOL)isEqual:(id)object {
-  if (![object isKindOfClass:[GCIndexConflict class]]) {
+  if (![(NSObject *)object isKindOfClass:[GCIndexConflict class]]) {
     return NO;
   }
   return [self isEqualToIndexConflict:object];

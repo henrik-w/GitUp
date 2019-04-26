@@ -85,7 +85,7 @@ extern int git_reference__is_tag(const char* ref_name);
 }
 
 - (BOOL)isEqual:(id)object {
-  if (![object isMemberOfClass:[GCRemote class]]) {
+  if (![(NSObject *)object isMemberOfClass:[GCRemote class]]) {
     return NO;
   }
   return [self isEqualToRemote:object];

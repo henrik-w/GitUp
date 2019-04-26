@@ -69,7 +69,7 @@
 }
 
 - (BOOL)isEqual:(id)object {
-  if (![object isKindOfClass:[GCReference class]]) {
+  if (![(NSObject *)object isKindOfClass:[GCReference class]]) {
     return NO;
   }
   return [self isEqualToReference:object];

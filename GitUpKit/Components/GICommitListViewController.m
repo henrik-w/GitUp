@@ -75,11 +75,11 @@
   _referenceCellHeight = view.frame.size.height;
 }
 
-- (void)setResults:(NSArray*)results {
+- (void)setResults:(NSArray<NSObject*>*)results {
   _results = [results copy];
   if (_results) {
     _commits = [[NSMutableArray alloc] initWithCapacity:_results.count];
-    for (id result in _results) {
+    for (NSObject* result in _results) {
       if ([result isKindOfClass:[GCCommit class]]) {
         [_commits addObject:result];
       } else if ([result isKindOfClass:[GCHistoryLocalBranch class]]) {
@@ -174,10 +174,10 @@
 #pragma mark - NSTableViewDelegate
 
 - (NSView*)tableView:(NSTableView*)tableView viewForTableColumn:(NSTableColumn*)tableColumn row:(NSInteger)row {
-  id result = _results[row];
+  NSObject* result = _results[row];
 
   if ([result isKindOfClass:[GCCommit class]]) {
-    GCCommit* commit = result;
+    GCCommit* commit = (GCCommit*)result;
     GICommitCellView* view = [tableView makeViewWithIdentifier:@"commit" owner:self];
     view.row = row;
     view.dateTextField.stringValue = [_dateFormatter stringFromDate:commit.date];
@@ -194,8 +194,8 @@
     return view;
   }
 
-  if ([result isKindOfClass:[GCReference class]]) {
-    GCReference* reference = result;
+  else if ([result isKindOfClass:[GCReference class]]) {
+    GCReference* reference = (GCReference*)result;
     GIReferenceCellView* view = [tableView makeViewWithIdentifier:@"reference" owner:self];
     view.row = row;
     if ([reference isKindOfClass:[GCHistoryLocalBranch class]]) {
@@ -219,7 +219,7 @@
 - (CGFloat)tableView:(NSTableView*)tableView heightOfRow:(NSInteger)row {
   id result = _results[row];
 
-  if ([result isKindOfClass:[GCCommit class]]) {
+  if ([(NSObject *)result isKindOfClass:[GCCommit class]]) {
     GCCommit* commit = result;
     _cachedCommitCellView.frame = NSMakeRect(0, 0, [_tableView.tableColumns[0] width], 1000);
     NSTextField* textField = _cachedCommitCellView.summaryTextField;
@@ -230,7 +230,7 @@
     return _cachedCommitCellView.frame.size.height + delta;
   }
 
-  if ([result isKindOfClass:[GCReference class]]) {
+  if ([(NSObject *)result isKindOfClass:[GCReference class]]) {
     return _referenceCellHeight;
   }
 

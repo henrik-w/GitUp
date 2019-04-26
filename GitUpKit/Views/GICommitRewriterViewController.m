@@ -43,7 +43,7 @@
   BOOL _disableFeedbackLoop;
   NSDateFormatter* _dateFormatter;
   GCHistoryCommit* _targetCommit;
-  id _savedHEAD;
+  NSObject* _savedHEAD;
 }
 
 @dynamic delegate;
@@ -123,9 +123,9 @@
 - (BOOL)_restoreHEAD:(NSError**)error {
   BOOL success;
   if ([_savedHEAD isKindOfClass:[GCBranch class]]) {
-    success = [self.repository checkoutLocalBranch:_savedHEAD options:(kGCCheckoutOption_UpdateSubmodulesRecursively | kGCCheckoutOption_Force) error:error];
+    success = [self.repository checkoutLocalBranch:(GCLocalBranch*)_savedHEAD options:(kGCCheckoutOption_UpdateSubmodulesRecursively | kGCCheckoutOption_Force) error:error];
   } else if ([_savedHEAD isKindOfClass:[GCCommit class]]) {
-    success = [self.repository checkoutCommit:_savedHEAD options:(kGCCheckoutOption_UpdateSubmodulesRecursively | kGCCheckoutOption_Force) error:error];
+    success = [self.repository checkoutCommit:(GCCommit*)_savedHEAD options:(kGCCheckoutOption_UpdateSubmodulesRecursively | kGCCheckoutOption_Force) error:error];
   } else {
     success = YES;
   }

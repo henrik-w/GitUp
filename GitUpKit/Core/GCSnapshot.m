@@ -466,7 +466,7 @@ static inline BOOL _EqualSnapshots(GCSnapshot* snapshot1, GCSnapshot* snapshot2,
 }
 
 - (BOOL)isEqual:(id)object {
-  if (![object isKindOfClass:[GCSnapshot class]]) {
+  if (![(NSObject *)object isKindOfClass:[GCSnapshot class]]) {
     return NO;
   }
   return [self isEqualToSnapshot:object usingOptions:kGCSnapshotOption_IncludeAll];

@@ -22,7 +22,7 @@
 @implementation GCReflogEntry {
   GCRepository* _repository;
   NSMutableArray* _references;
-  NSMutableArray* _messages;
+  NSMutableArray<NSString*>* _messages;
   git_oid _fromOID;
   git_oid _toOID;
   git_time _time;
@@ -217,7 +217,7 @@ static CFHashCode _EntryHashCallBack(const void* value) {
 }
 
 - (BOOL)isEqual:(id)object {
-  if (![object isKindOfClass:[GCReflogEntry class]]) {
+  if (![(NSObject *)object isKindOfClass:[GCReflogEntry class]]) {
     return NO;
   }
   return [self isEqualToReflogEntry:object];

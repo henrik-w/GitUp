@@ -174,9 +174,9 @@
 }
 
 - (GIWindowController*)windowController {
-  id controller = self.view.window.windowController;
+  NSWindowController* controller = self.view.window.windowController;
   if ([controller isKindOfClass:[GIWindowController class]]) {
-    return controller;
+    return (GIWindowController*)controller;
   }
   XLOG_DEBUG_UNREACHABLE();
   return nil;

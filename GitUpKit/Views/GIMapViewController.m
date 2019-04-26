@@ -570,7 +570,7 @@ static NSColor* _patternColor = nil;
   }
 }
 
-- (id)_smartCheckoutTarget:(GCHistoryCommit*)commit {
+- (NSObject*)_smartCheckoutTarget:(GCHistoryCommit*)commit {
   NSArray* branches = commit.localBranches;
   if (branches.count > 1) {
     GCHistoryLocalBranch* headBranch = self.repository.history.HEADBranch;
@@ -679,13 +679,13 @@ static NSColor* _patternColor = nil;
   }
 
   if (item.action == @selector(checkoutSelectedCommit:)) {
-    id target = [self _smartCheckoutTarget:commit];
+    NSObject* target = [self _smartCheckoutTarget:commit];
     if ([target isKindOfClass:[GCLocalBranch class]]) {
-      _checkoutMenuItem.title = [NSString stringWithFormat:NSLocalizedString(@"Checkout \"%@\" Branch", nil), [target name]];
-      return ![self.repository.history.HEADBranch isEqualToBranch:target];
+      _checkoutMenuItem.title = [NSString stringWithFormat:NSLocalizedString(@"Checkout \"%@\" Branch", nil), [(GCHistoryLocalBranch*)target name]];
+      return ![self.repository.history.HEADBranch isEqualToBranch:(GCHistoryLocalBranch*)target];
     } else {
       _checkoutMenuItem.title = NSLocalizedString(@"Checkout Detached HEAD", nil);
-      return ![self.repository.history.HEADCommit isEqualToCommit:target];
+      return ![self.repository.history.HEADCommit isEqualToCommit:(GCHistoryCommit*)target];
     }
   }
 
@@ -866,7 +866,7 @@ static NSColor* _patternColor = nil;
 - (IBAction)checkoutSelectedCommit:(id)sender {
   GCHistoryCommit* commit = _graphView.selectedCommit;
   id target = [self _smartCheckoutTarget:commit];
-  if ([target isKindOfClass:[GCLocalBranch class]]) {
+  if ([(NSObject *)target isKindOfClass:[GCLocalBranch class]]) {
     [self checkoutLocalBranch:target];
   } else {
     GCHistoryRemoteBranch* branch = commit.remoteBranches.firstObject;
@@ -1133,7 +1133,7 @@ static NSColor* _patternColor = nil;
   GCHistoryLocalBranch* localBranch;
   GCHistoryRemoteBranch* remoteBranch;
   id representedObject = [(NSMenuItem*)sender representedObject];
-  if ([representedObject isKindOfClass:[NSArray class]]) {
+  if ([(NSObject *)representedObject isKindOfClass:[NSArray class]]) {
     localBranch = [representedObject objectAtIndex:0];
     remoteBranch = [representedObject objectAtIndex:1];
   } else {

@@ -67,7 +67,7 @@
 
 // For NSTextFields that are only selectable, return a custom field editor that forwards all key events to the next responder
 - (NSText*)fieldEditor:(BOOL)createFlag forObject:(id)anObject {
-  if ([anObject isKindOfClass:[NSTextField class]] && [(NSTextField*)anObject isSelectable] && ![(NSTextField*)anObject isEditable]) {
+  if ([(NSObject *)anObject isKindOfClass:[NSTextField class]] && [(NSTextField*)anObject isSelectable] && ![(NSTextField*)anObject isEditable]) {
     if (!_fieldEditor && createFlag) {
       _fieldEditor = [[GIFieldEditor alloc] init];
       _fieldEditor.fieldEditor = YES;

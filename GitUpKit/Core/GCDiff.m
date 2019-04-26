@@ -297,7 +297,7 @@ static inline BOOL _EqualDeltas(const git_diff_delta* delta1, const git_diff_del
 }
 
 - (BOOL)isEqual:(id)object {
-  if (![object isKindOfClass:[GCDiffDelta class]]) {
+  if (![(NSObject *)object isKindOfClass:[GCDiffDelta class]]) {
     return NO;
   }
   return [self isEqualToDelta:object];
@@ -419,7 +419,7 @@ static inline BOOL _EqualDiffs(git_diff* diff1, git_diff* diff2) {
 }
 
 - (BOOL)isEqual:(id)object {
-  if (![object isKindOfClass:[GCDiff class]]) {
+  if (![(NSObject *)object isKindOfClass:[GCDiff class]]) {
     return NO;
   }
   return [self isEqualToDiff:object];

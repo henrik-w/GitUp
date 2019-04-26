@@ -47,7 +47,7 @@ typedef NS_OPTIONS(NSUInteger, GCReflogActions) {
 @property(nonatomic, readonly) NSString* committerName;
 @property(nonatomic, readonly) NSString* committerEmail;
 @property(nonatomic, readonly) NSArray* references;  // Matches @messages
-@property(nonatomic, readonly) NSArray* messages;  // Matches @references
+@property(nonatomic, readonly) NSArray<NSString*>* messages;  // Matches @references
 @property(nonatomic, readonly) GCReflogActions actions;  // Guessed from messages (might not be reliable)
 @end
 

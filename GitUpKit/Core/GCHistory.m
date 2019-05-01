@@ -42,130 +42,140 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
 @implementation GCHistoryCommit {
 @public
   NSUInteger _autoIncrementID;
-  CFMutableArrayRef _parents;
-  CFMutableArrayRef _children;
-  CFMutableArrayRef _localBranches;
-  CFMutableArrayRef _remoteBranches;
-  CFMutableArrayRef _tags;
+  NSMutableArray<GCHistoryCommit*>* _parents;
+  NSMutableArray<GCHistoryCommit*>* _children;
+  NSMutableArray<GCHistoryLocalBranch*>* _localBranches;
+  NSMutableArray<GCHistoryRemoteBranch*>* _remoteBranches;
+  NSMutableArray<GCHistoryTag*>* _tags;
 }
 
 - (instancetype)initWithRepository:(GCRepository*)repository commit:(git_commit*)commit autoIncrementID:(NSUInteger)autoIncrementID {
   if ((self = [super initWithRepository:repository commit:commit])) {
     _autoIncrementID = autoIncrementID;
-    _parents = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
-    _children = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+    _parents = [[NSMutableArray arrayWithCapacity:0] retain];
+    _children = [[NSMutableArray arrayWithCapacity:0] retain];
+    _localBranches = nil;
+    _remoteBranches = nil;
+    _tags = nil;
   }
   return self;
 }
 
 - (void)dealloc {
-  if (_localBranches) {
-    CFRelease(_localBranches);
+  if (nil != _localBranches) {
+    [_localBranches release];
   }
-  if (_remoteBranches) {
-    CFRelease(_remoteBranches);
+  if (nil != _remoteBranches) {
+    [_remoteBranches release];
   }
-  if (_tags) {
-    CFRelease(_tags);
+  if (nil != _tags) {
+    [_tags release];
   }
-  CFRelease(_children);
-  CFRelease(_parents);
+  if (nil != _children) {
+    [_children release];
+  }
+  if (nil != _parents) {
+    [_parents release];
+  }
 
   [super dealloc];
 }
 
-- (NSArray*)parents {
-  return (NSArray*)_parents;
+- (NSArray<GCHistoryCommit*>*)parents {
+  return _parents;
 }
 
-- (NSArray*)children {
-  return (NSArray*)_children;
+- (NSArray<GCHistoryCommit*>*)children {
+  return _children;
 }
 
-- (NSArray*)localBranches {
-  return (NSArray*)_localBranches;
+- (NSArray<GCHistoryLocalBranch*>*)localBranches {
+  return _localBranches;
 }
 
-- (NSArray*)remoteBranches {
-  return (NSArray*)_remoteBranches;
+- (NSArray<GCHistoryRemoteBranch*>*)remoteBranches {
+  return _remoteBranches;
 }
 
-- (NSArray*)tags {
-  return (NSArray*)_tags;
+- (NSArray<GCHistoryTag*>*)tags {
+  return _tags;
 }
 
 - (void)addParent:(GCHistoryCommit*)commit {
-  CFArrayAppendValue(_parents, (const void*)commit);
+  [_parents addObject:commit];
 }
 
 - (void)removeParent:(GCHistoryCommit*)commit {
-  CFIndex index = CFArrayGetFirstIndexOfValue(_parents, CFRangeMake(0, CFArrayGetCount(_parents)), (const void*)commit);
-  if (index != kCFNotFound) {
-    CFArrayRemoveValueAtIndex(_parents, index);
+  NSUInteger index = [_parents indexOfObject:commit];
+  if (NSNotFound != index) {
+    [_parents removeObjectAtIndex:index];
   } else {
     XLOG_DEBUG_UNREACHABLE();
   }
 }
 
 - (void)addChild:(GCHistoryCommit*)commit {
-  CFArrayAppendValue(_children, (const void*)commit);
+  [_children addObject:commit];
 }
 
 - (void)removeChild:(GCHistoryCommit*)commit {
-  CFIndex index = CFArrayGetFirstIndexOfValue(_children, CFRangeMake(0, CFArrayGetCount(_children)), (const void*)commit);
-  if (index != kCFNotFound) {
-    CFArrayRemoveValueAtIndex(_children, index);
+  NSUInteger index = [_children indexOfObject:commit];
+  if (NSNotFound != index) {
+    [_children removeObjectAtIndex:index];
   } else {
     XLOG_DEBUG_UNREACHABLE();
   }
 }
 
 - (void)addLocalBranch:(GCHistoryLocalBranch*)branch {
-  if (_localBranches == NULL) {
-    _localBranches = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+  if (nil == _localBranches) {
+    _localBranches = [[NSMutableArray arrayWithObject:branch] retain];
+  } else {
+    [_localBranches addObject:branch];
   }
-  CFArrayAppendValue(_localBranches, (const void*)branch);
 }
 
 - (void)addRemoteBranch:(GCHistoryRemoteBranch*)branch {
-  if (_remoteBranches == NULL) {
-    _remoteBranches = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+  if (nil == _remoteBranches) {
+    _remoteBranches = [[NSMutableArray arrayWithObject:branch] retain];
+  } else {
+    [_remoteBranches addObject:branch];
   }
-  CFArrayAppendValue(_remoteBranches, (const void*)branch);
 }
 
 - (void)addTag:(GCHistoryTag*)tag {
-  if (_tags == NULL) {
-    _tags = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+  if (nil == _tags) {
+    _tags = [[NSMutableArray arrayWithObject:tag] retain];
+  } else {
+    [_tags addObject:tag];
   }
-  CFArrayAppendValue(_tags, (const void*)tag);
 }
 
 - (void)removeAllReferences {
-  if (_localBranches) {
-    CFRelease(_localBranches);
-    _localBranches = NULL;
+  if (nil != _localBranches) {
+    [_localBranches release];
+    _localBranches = nil;
   }
-  if (_remoteBranches) {
-    CFRelease(_remoteBranches);
-    _remoteBranches = NULL;
+  if (nil != _remoteBranches) {
+    [_remoteBranches release];
+    _remoteBranches = nil;
   }
-  if (_tags) {
-    CFRelease(_tags);
-    _tags = NULL;
+  if (nil != _tags) {
+    [_tags release];
+    _tags = nil;
   }
 }
 
 - (BOOL)isRoot {
-  return CFArrayGetCount(_parents) ? NO : YES;
+  return [_parents count] == 0;
 }
 
 - (BOOL)isLeaf {
-  return CFArrayGetCount(_children) ? NO : YES;
+  return [_children count] == 0;
 }
 
 - (BOOL)hasReferences {
-  return _localBranches || _remoteBranches || _tags;
+  return nil != _localBranches || nil != _remoteBranches || nil != _tags;
 }
 
 @end
@@ -202,15 +212,15 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
 
 @interface GCHistory ()
 @property(nonatomic) NSUInteger nextGeneration;
-@property(nonatomic, strong) NSArray* tags;
-@property(nonatomic, strong) NSArray* localBranches;
-@property(nonatomic, strong) NSArray* remoteBranches;
+@property(nonatomic, strong) NSArray<GCHistoryTag*>* tags;
+@property(nonatomic, strong) NSArray<GCLocalBranch*>* localBranches;
+@property(nonatomic, strong) NSArray<GCRemoteBranch*>* remoteBranches;
 @property(nonatomic) NSUInteger nextAutoIncrementID;
-@property(nonatomic, readonly) NSMutableArray* commits;
-@property(nonatomic, readonly) NSMutableArray* roots;
-@property(nonatomic, readonly) NSMutableArray* leaves;
+@property(nonatomic, readonly) NSMutableArray<GCHistoryCommit*>* commits;
+@property(nonatomic, readonly) NSMutableArray<GCHistoryCommit*>* roots;
+@property(nonatomic, readonly) NSMutableArray<GCHistoryCommit*>* leaves;
 @property(nonatomic, readonly) CFMutableDictionaryRef lookup;
-@property(nonatomic, strong) NSSet* tips;
+@property(nonatomic, strong) NSSet<GCCommit*>* tips;
 @property(nonatomic, assign) GCHistoryCommit* HEADCommit;
 @property(nonatomic, assign) GCHistoryLocalBranch* HEADBranch;
 @property(nonatomic, strong) NSData* md5;
@@ -222,13 +232,14 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
 
 - (instancetype)initWithRepository:(GCRepository*)repository sorting:(GCHistorySorting)sorting {
   if ((self = [super init])) {
-    _repository = repository;
+    _repository = [repository retain];
     _sorting = sorting;
-    _commits = [[NSMutableArray alloc] initWithCapacity:4096];
-    _roots = [[NSMutableArray alloc] init];
-    _leaves = [[NSMutableArray alloc] init];
+    _commits = [[NSMutableArray arrayWithCapacity:4096] retain];
+    _roots = [[NSMutableArray array] retain];
+    _leaves = [[NSMutableArray array] retain];
     CFDictionaryKeyCallBacks callbacks = {0, NULL, NULL, NULL, GCOIDEqualCallBack, GCOIDHashCallBack};
     _lookup = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &callbacks, NULL);
+    CFRetain(_lookup);
   }
   return self;
 }
@@ -245,6 +256,8 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
   [_roots release];
   [_commits release];
 
+  [_repository release];
+
   [super dealloc];
 }
 
@@ -254,15 +267,15 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
   return !_commits.count;
 }
 
-- (NSArray*)allCommits {
+- (NSArray<GCHistoryCommit*>*)allCommits {
   return _commits;
 }
 
-- (NSArray*)rootCommits {
+- (NSArray<GCHistoryCommit*>*)rootCommits {
   return _roots;
 }
 
-- (NSArray*)leafCommits {
+- (NSArray<GCHistoryCommit*>*)leafCommits {
   return _leaves;
 }
 
@@ -339,9 +352,8 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
       if (![walker iterateWithCommitBlock:^(GCHistoryCommit* commit, BOOL* stop) {
             if (!COMMIT_STATE(commit)) {
               BOOL skip = NO;
-              CFArrayRef children = commit->_children;
-              for (CFIndex i = 0, count = CFArrayGetCount(children); i < count; ++i) {
-                GCHistoryCommit* childCommit = CFArrayGetValueAtIndex(children, i);
+              NSArray<GCHistoryCommit*>* children = commit->_children;
+              for (GCHistoryCommit* childCommit in children) {
                 if (COMMIT_STATE(childCommit)) {
                   skip = YES;
                   break;
@@ -465,9 +477,8 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
       BOOL ready = YES;
 
       // Check if this commit is "ready" i.e. all its children (respectively parents) have been processed (but not on the current iteration)
-      CFArrayRef relations = _followParents ? commit->_children : commit->_parents;
-      for (CFIndex j = 0, jMax = CFArrayGetCount(relations); j < jMax; ++j) {
-        GCHistoryCommit* relation = CFArrayGetValueAtIndex(relations, j);
+      NSArray<GCHistoryCommit*> *relations = _followParents ? commit->_children : commit->_parents;
+      for (GCHistoryCommit* relation in relations) {
         ready = COMMIT_IS_PROCESSED(relation) && !COMMIT_WAS_JUST_PROCESSED(relation);
         if (!ready) {
           break;
@@ -496,9 +507,8 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
       // If commit was processed, attempt to process its parents (respectively children)
       if (COMMIT_IS_PROCESSED(previousCommit)) {
         if (!COMMIT_WAS_JUST_PROCESSED(previousCommit)) {
-          CFArrayRef relations = _followParents ? previousCommit->_parents : previousCommit->_children;
-          for (CFIndex i = 0, iMax = CFArrayGetCount(relations); i < iMax; ++i) {
-            GCHistoryCommit* relation = CFArrayGetValueAtIndex(relations, i);
+          NSArray<GCHistoryCommit*>* relations = _followParents ? previousCommit->_parents : previousCommit->_children;
+          for (GCHistoryCommit* relation in relations) {
             if (!COMMIT_WAS_JUST_PROCESSED(relation) && !COMMIT_WAS_JUST_SKIPPED(relation)) {
               XLOG_DEBUG_CHECK(!GC_POINTER_LIST_CONTAINS(row, relation));
               if (!commitBlock(relation)) {
@@ -553,8 +563,8 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
           BOOL isParent = NO;
           GC_POINTER_LIST_FOR_LOOP(candidates, GCHistoryCommit*, candidate2) {
             if (candidate2 != candidate1) {
-              CFArrayRef relations = _followParents ? candidate2->_parents : candidate2->_children;
-              if (CFArrayContainsValue(relations, CFRangeMake(0, CFArrayGetCount(relations)), candidate1)) {
+              NSArray<GCHistoryCommit*>* relations = _followParents ? candidate2->_parents : candidate2->_children;
+              if ([relations containsObject:candidate1]) {
                 isParent = YES;
                 break;
               }
@@ -664,17 +674,16 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
       if (!block(parentCommit, childCommit)) {
         break;
       }
-      CFArrayRef grandParents = parentCommit->_parents;
-      CFIndex grandCount = CFArrayGetCount(grandParents);
-      if (grandCount) {
-        childCommit = parentCommit;
-        parentCommit = CFArrayGetValueAtIndex(grandParents, 0);
-        for (CFIndex i = 1; i < grandCount; ++i) {
-          GC_POINTER_LIST_APPEND(parentsCommits, (GCHistoryCommit*)CFArrayGetValueAtIndex(grandParents, i));
-          GC_POINTER_LIST_APPEND(childrenCommits, childCommit);
-        }
-      } else {
+      NSArray<GCHistoryCommit*>* grandParents = parentCommit->_parents;
+      const NSUInteger grandCount = [grandParents count];
+      if (!grandCount) {
         break;
+      }
+      childCommit = parentCommit;
+      parentCommit = [grandParents objectAtIndex:0];
+      for (NSUInteger i = 1; i < grandCount; ++i) {
+        GC_POINTER_LIST_APPEND(parentsCommits, [grandParents objectAtIndex:i]);
+        GC_POINTER_LIST_APPEND(childrenCommits, childCommit);
       }
     }
   }
@@ -685,8 +694,8 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
 - (BOOL)_reloadHistory:(GCHistory*)history
           usingSnapshot:(GCSnapshot*)snapshot
     referencesDidChange:(BOOL*)outReferencesDidChange
-           addedCommits:(NSArray**)outAddedCommits
-         removedCommits:(NSArray**)outRemovedCommits
+           addedCommits:(NSArray<GCHistoryCommit*>**)outAddedCommits
+         removedCommits:(NSArray<GCHistoryCommit*>**)outRemovedCommits
                   error:(NSError**)error {
   XLOG_DEBUG_CHECK([NSThread isMainThread]);  // This could work from any thread but it really shouldn't happen in practice
   BOOL success = NO;
@@ -695,19 +704,19 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
   GCCommit* headTip = nil;
   __block GCHistoryLocalBranch* headBranch = nil;
   git_reference* headReference = NULL;
-  NSMutableSet* tips = [[NSMutableSet alloc] init];
-  NSSet* historyTips = history.tips;
-  NSMutableArray* tags = [[NSMutableArray alloc] init];
-  NSMutableArray* localBranches = [[NSMutableArray alloc] init];
-  NSMutableArray* remoteBranches = [[NSMutableArray alloc] init];
+  NSMutableSet<GCCommit*>* tips = [NSMutableSet set];
+  NSSet<GCCommit*>* historyTips = history.tips;
+  NSMutableArray<GCHistoryTag*>* tags = [NSMutableArray array];
+  NSMutableArray<GCHistoryLocalBranch*>* localBranches = [NSMutableArray array];
+  NSMutableArray<GCHistoryRemoteBranch*>* remoteBranches = [NSMutableArray array];
   git_revwalk* walker = NULL;
   CFMutableDictionaryRef lookup = history.lookup;
-  NSMutableArray* commits = historyTips ? [NSMutableArray array] : history.commits;
-  NSMutableArray* roots = history.roots;
-  NSMutableArray* leaves = history.leaves;
-  NSMutableArray* addedCommits = nil;
-  NSMutableArray* removedCommits = nil;
-  NSDictionary* config = nil;
+  NSMutableArray<GCHistoryCommit*>* commits = historyTips ? [NSMutableArray array] : history.commits;
+  NSMutableArray<GCHistoryCommit*>* roots = history.roots;
+  NSMutableArray<GCHistoryCommit*>* leaves = history.leaves;
+  NSMutableArray<GCHistoryCommit*>* addedCommits = nil;
+  NSMutableArray<GCHistoryCommit*>* removedCommits = nil;
+  NSDictionary<NSString *, NSString *>* config = nil;
 
   // Reset output arguments
   if (outReferencesDidChange) {
@@ -730,7 +739,7 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
     }
     config = [NSMutableDictionary dictionary];
     for (GCConfigOption* option in options) {
-      [(NSMutableDictionary*)config setObject:option.value forKey:option.variable];  // TODO: Handle duplicate config entries for the same variable
+      [(NSMutableDictionary<NSString *, NSString *>*)config setObject:option.value forKey:option.variable];  // TODO: Handle duplicate config entries for the same variable
     }
   }
 
@@ -777,8 +786,7 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
   }
 
   // Find all other tips
-  BOOL (^enumerateBlock)
-  (git_reference*) = ^(git_reference* reference) {
+  BOOL (^enumerateBlock)(git_reference*) = ^(git_reference* reference) {
     GCReference* referenceObject = nil;
     if (git_reference_type(reference) != GIT_REF_SYMBOLIC) {  // Skip symbolic refs like "remote/origin/HEAD"
       git_commit* commit = NULL;
@@ -813,10 +821,10 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
         git_buf upstreamName = {0};
         if (git_reference_is_tag(reference)) {
           referenceObject = [[GCHistoryTag alloc] initWithRepository:self reference:reference];
-          [tags addObject:referenceObject];
+          [tags addObject:(GCHistoryTag*)referenceObject];
         } else if (git_reference_is_branch(reference)) {
           referenceObject = [[GCHistoryLocalBranch alloc] initWithRepository:self reference:reference];
-          [localBranches addObject:referenceObject];
+          [localBranches addObject:(GCHistoryLocalBranch *)referenceObject];
           if (headReference && ([referenceObject compareWithReference:headReference] == NSOrderedSame)) {
             XLOG_DEBUG_CHECK(headBranch == nil);
             headBranch = (GCHistoryLocalBranch*)referenceObject;
@@ -831,7 +839,7 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
           }
         } else if (git_reference_is_remote(reference)) {
           referenceObject = [[GCHistoryRemoteBranch alloc] initWithRepository:self reference:reference];
-          [remoteBranches addObject:referenceObject];
+          [remoteBranches addObject:(GCHistoryRemoteBranch*)referenceObject];
         } else {
           XLOG_VERBOSE(@"Ignoring reference \"%s\" for history of \"%@\"", git_reference_name(reference), self.repositoryPath);
         }
@@ -865,6 +873,7 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
     }
     return YES;
   };
+
   if (snapshot) {
     for (GCSerializedReference* serializedReference in snapshot.serializedReferences) {
       if ([serializedReference isHEAD]) {
@@ -1154,7 +1163,7 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
   if (outRemovedCommits) {
     *outRemovedCommits = removedCommits;
   }
-  [removedCommits autorelease];  // Don't release remove commits immediately as client may still depend on them!
+  [removedCommits autorelease];  // Don't release removed commits immediately a client may still depend on them!
   success = YES;
 
 #if DEBUG
@@ -1182,10 +1191,6 @@ static const void* _associatedObjectUpstreamNameKey = &_associatedObjectUpstream
 
 cleanup:
   [headTip release];
-  [tips release];
-  [tags release];
-  [localBranches release];
-  [remoteBranches release];
   git_revwalk_free(walker);
   git_reference_free(headReference);
   return success;

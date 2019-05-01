@@ -23,15 +23,15 @@ typedef NS_ENUM(NSUInteger, GCHistorySorting) {
   kGCHistorySorting_ReverseChronological
 };
 
-@class GCSearchIndex, GCSnapshot;
+@class GCSearchIndex, GCSnapshot, GCHistoryLocalBranch, GCHistoryRemoteBranch, GCHistoryTag;
 
 @interface GCHistoryCommit : GCCommit
 @property(nonatomic, readonly) NSUInteger autoIncrementID;  // Uniquely increasing ID for each GCHistoryCommit instantiated for a GCHistory (can be used for LUTs)
-@property(nonatomic, readonly) NSArray* parents;  // Sorting is defined by hierarchy
-@property(nonatomic, readonly) NSArray* children;  // Sorting is arbitrary and not guaranteed to be stable
-@property(nonatomic, readonly) NSArray* localBranches;
-@property(nonatomic, readonly) NSArray* remoteBranches;
-@property(nonatomic, readonly) NSArray* tags;
+@property(nonatomic, readonly) NSArray<GCHistoryCommit*>* parents;  // Sorting is defined by hierarchy
+@property(nonatomic, readonly) NSArray<GCHistoryCommit*>* children;  // Sorting is arbitrary and not guaranteed to be stable
+@property(nonatomic, readonly) NSArray<GCHistoryLocalBranch*>* localBranches;
+@property(nonatomic, readonly) NSArray<GCHistoryRemoteBranch*>* remoteBranches;
+@property(nonatomic, readonly) NSArray<GCHistoryTag*>* tags;
 @property(nonatomic, readonly, getter=isRoot) BOOL root;
 @property(nonatomic, readonly, getter=isLeaf) BOOL leaf;
 @property(nonatomic, readonly) BOOL hasReferences;
@@ -55,15 +55,15 @@ typedef NS_ENUM(NSUInteger, GCHistorySorting) {
 @property(nonatomic, readonly) GCRepository* repository;  // NOT RETAINED
 @property(nonatomic, readonly) GCHistorySorting sorting;
 @property(nonatomic, readonly, getter=isEmpty) BOOL empty;  // Convenience method
-@property(nonatomic, readonly) NSArray* allCommits;
-@property(nonatomic, readonly) NSArray* rootCommits;
-@property(nonatomic, readonly) NSArray* leafCommits;
+@property(nonatomic, readonly) NSArray<GCHistoryCommit*>* allCommits;
+@property(nonatomic, readonly) NSArray<GCHistoryCommit*>* rootCommits;
+@property(nonatomic, readonly) NSArray<GCHistoryCommit*>* leafCommits;
 @property(nonatomic, readonly) GCHistoryCommit* HEADCommit;  // nil if HEAD is unborn
 @property(nonatomic, readonly) GCHistoryLocalBranch* HEADBranch;  // nil if HEAD is detached
 @property(nonatomic, readonly, getter=isHEADDetached) BOOL HEADDetached;  // Convenience method
-@property(nonatomic, readonly) NSArray* tags;  // Always sorted alphabetically
-@property(nonatomic, readonly) NSArray* localBranches;  // Always sorted alphabetically
-@property(nonatomic, readonly) NSArray* remoteBranches;  // Always sorted alphabetically
+@property(nonatomic, readonly) NSArray<GCHistoryTag*>* tags;  // Always sorted alphabetically
+@property(nonatomic, readonly) NSArray<GCLocalBranch*>* localBranches;  // Always sorted alphabetically
+@property(nonatomic, readonly) NSArray<GCRemoteBranch*>* remoteBranches;  // Always sorted alphabetically
 @property(nonatomic, readonly) NSUInteger nextAutoIncrementID;  // See @autoIncrementID on GCHistoryCommit
 - (GCHistoryCommit*)historyCommitWithSHA1:(NSString*)sha1;
 - (GCHistoryCommit*)historyCommitForCommit:(GCCommit*)commit;

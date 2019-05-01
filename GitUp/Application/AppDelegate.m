@@ -252,9 +252,14 @@
 
   _allowWelcome = -1;
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+  _twitterButton.textAlignment = NSTextAlignmentLeft;
+  _forumsButton.textAlignment = NSTextAlignmentLeft;
+#else
   _twitterButton.textAlignment = NSLeftTextAlignment;
-  _twitterButton.textFont = [NSFont boldSystemFontOfSize:11];
   _forumsButton.textAlignment = NSLeftTextAlignment;
+#endif
+  _twitterButton.textFont = [NSFont boldSystemFontOfSize:11];
   _forumsButton.textFont = [NSFont boldSystemFontOfSize:11];
 
   _preferencesToolbar.selectedItemIdentifier = kPreferencePaneIdentifier_General;
@@ -365,14 +370,18 @@
   // Prompt to install command line tool if needed
   if (![[NSUserDefaults standardUserDefaults] boolForKey:kUserDefaultsKey_FirstLaunch] && ![[NSUserDefaults standardUserDefaults] boolForKey:kUserDefaultsKey_SkipInstallCLT]) {
     if (![[NSFileManager defaultManager] isExecutableFileAtPath:kToolInstallPath]) {
-      NSAlert* alert = [NSAlert alertWithMessageText:NSLocalizedString(@"Install GitUp command line tool?", nil)
-                                       defaultButton:NSLocalizedString(@"Install", nil)
-                                     alternateButton:NSLocalizedString(@"Not Now", nil)
-                                         otherButton:nil
-                           informativeTextWithFormat:NSLocalizedString(@"GitUp can install a companion command line tool at \"%@\" which lets you control GitUp from the terminal.\n\nYou can install it at any time from the GitUp menu.", nil), kToolInstallPath];
+      NSAlert* alert = [[NSAlert alloc] init];
+      alert.messageText = NSLocalizedString(@"Install GitUp command line tool?", nil);
+      alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"GitUp can install a companion command line tool at \"%@\" which lets you control GitUp from the terminal.\n\nYou can install it at any time from the GitUp menu.", nil), kToolInstallPath];
+      [alert addButtonWithTitle:NSLocalizedString(@"Install", nil)];
+      [alert addButtonWithTitle:NSLocalizedString(@"Not Now", nil)];
       alert.type = kGIAlertType_Note;
       alert.showsSuppressionButton = YES;
-      if ([alert runModal] == NSAlertDefaultReturn) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_10
+      if ([alert runModal] == NSAlertFirstButtonReturn) {
+#else
+        if ([alert runModal] == NSAlertDefaultReturn) {
+#endif
         [self installTool:nil];
       }
       if (alert.suppressionButton.state) {
@@ -461,11 +470,19 @@
 #pragma mark - Tool
 
 static CFDataRef _MessagePortCallBack(CFMessagePortRef local, SInt32 msgid, CFDataRef data, void* info) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+  NSDictionary<NSString*, NSString*>* input = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSDictionary class] fromData:(__bridge NSData*)data error:nil];
+#else
   NSDictionary* input = [NSKeyedUnarchiver unarchiveObjectWithData:(__bridge NSData*)data];
+#endif
   XLOG_DEBUG_CHECK(input);
   NSDictionary* output = [(__bridge AppDelegate*)info _processToolCommand:input];
   XLOG_DEBUG_CHECK(output);
-  return CFBridgingRetain([NSKeyedArchiver archivedDataWithRootObject:output]);
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+  return (__bridge CFDataRef)[NSKeyedArchiver archivedDataWithRootObject:output requiringSecureCoding:NO error:nil];
+#else
+  return (__bridge CFDataRef)[NSKeyedArchiver archivedDataWithRootObject:output];
+#endif
 }
 
 - (NSDictionary*)_processToolCommand:(NSDictionary<NSString*, NSString*>*)input {
@@ -570,7 +587,11 @@ static CFDataRef _MessagePortCallBack(CFMessagePortRef local, SInt32 msgid, CFDa
   if ([savePanel respondsToSelector:@selector(setShowsTagField:)]) {
     [savePanel setShowsTagField:NO];
   }
-  if ([savePanel runModal] == NSFileHandlingPanelOKButton) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_13
+  if ([savePanel runModal] == NSModalResponseOK) {
+#else
+    if ([savePanel runModal] == NSFileHandlingPanelOKButton) {
+#endif
     NSString* path = savePanel.URL.path;
     NSError* error;
     if (![[NSFileManager defaultManager] fileExistsAtPath:path followLastSymlink:NO] || [[NSFileManager defaultManager] moveItemAtPathToTrash:path error:&error]) {
@@ -588,7 +609,11 @@ static CFDataRef _MessagePortCallBack(CFMessagePortRef local, SInt32 msgid, CFDa
 
 - (void)_cloneRepositoryFromURLString:(NSString*)urlString {
   _cloneURLTextField.stringValue = urlString;
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+  _cloneRecursiveButton.state = NSControlStateValueOn;
+#else
   _cloneRecursiveButton.state = NSOnState;
+#endif
   if ([NSApp runModalForWindow:_cloneWindow] && _cloneURLTextField.stringValue.length) {
     NSURL* url = GCURLFromGitURL(_cloneURLTextField.stringValue);
     if (url) {
@@ -601,7 +626,11 @@ static CFDataRef _MessagePortCallBack(CFMessagePortRef local, SInt32 msgid, CFDa
       if ([savePanel respondsToSelector:@selector(setShowsTagField:)]) {
         [savePanel setShowsTagField:NO];
       }
-      if ([savePanel runModal] == NSFileHandlingPanelOKButton) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_13
+      if ([savePanel runModal] == NSModalResponseOK) {
+#else
+        if ([savePanel runModal] == NSFileHandlingPanelOKButton) {
+#endif
         NSString* path = savePanel.URL.path;
         NSError* error;
         if (![[NSFileManager defaultManager] fileExistsAtPath:path followLastSymlink:NO] || [[NSFileManager defaultManager] moveItemAtPathToTrash:path error:&error]) {
@@ -677,11 +706,10 @@ static CFDataRef _MessagePortCallBack(CFMessagePortRef local, SInt32 msgid, CFDa
           [data appendBytes:buffer length:count];
         }
         if ((data.length == 2) && (((const char*)data.bytes)[0] == 'O') && (((const char*)data.bytes)[1] == 'K')) {
-          NSAlert* alert = [NSAlert alertWithMessageText:NSLocalizedString(@"GitUp command line tool was successfully installed!", nil)
-                                           defaultButton:NSLocalizedString(@"OK", nil)
-                                         alternateButton:nil
-                                             otherButton:nil
-                               informativeTextWithFormat:NSLocalizedString(@"The tool has been installed at \"%@\".\nRun \"gitup help\" in Terminal to learn more.", nil), kToolInstallPath];
+          NSAlert* alert = [[NSAlert alloc] init];
+          alert.messageText = NSLocalizedString(@"GitUp command line tool was successfully installed!", nil);
+          [alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
+          alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The tool has been installed at \"%@\".\nRun \"gitup help\" in Terminal to learn more.", nil), kToolInstallPath];
           alert.type = kGIAlertType_Note;
           [alert runModal];
         } else {
@@ -763,11 +791,10 @@ static CFDataRef _MessagePortCallBack(CFMessagePortRef local, SInt32 msgid, CFDa
   NSString* channel = [[NSUserDefaults standardUserDefaults] stringForKey:kUserDefaultsKey_ReleaseChannel];
   XLOG_INFO(@"Did find app update on channel '%@' for version %@", channel, item.versionString);
   if (_manualCheck) {
-    NSAlert* alert = [NSAlert alertWithMessageText:NSLocalizedString(@"A GitUp update is available!", nil)
-                                     defaultButton:NSLocalizedString(@"OK", nil)
-                                   alternateButton:nil
-                                       otherButton:nil
-                         informativeTextWithFormat:NSLocalizedString(@"The update will download automatically in the background and be installed when you quit GitUp.", nil)];
+    NSAlert* alert = [[NSAlert alloc] init];
+    alert.messageText = NSLocalizedString(@"A GitUp update is available!", nil);
+    [alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
+    alert.informativeText = NSLocalizedString(@"The update will download automatically in the background and be installed when you quit GitUp.", nil);
     alert.type = kGIAlertType_Note;
     [alert runModal];
   }
@@ -777,11 +804,10 @@ static CFDataRef _MessagePortCallBack(CFMessagePortRef local, SInt32 msgid, CFDa
   NSString* channel = [[NSUserDefaults standardUserDefaults] stringForKey:kUserDefaultsKey_ReleaseChannel];
   XLOG_VERBOSE(@"App is up-to-date at version %@ on channel '%@'", [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"], channel);
   if (_manualCheck) {
-    NSAlert* alert = [NSAlert alertWithMessageText:NSLocalizedString(@"GitUp is already up-to-date!", nil)
-                                     defaultButton:NSLocalizedString(@"OK", nil)
-                                   alternateButton:nil
-                                       otherButton:nil
-                         informativeTextWithFormat:@""];
+    NSAlert* alert = [[NSAlert alloc] init];
+    alert.messageText = NSLocalizedString(@"GitUp is already up-to-date!", nil);
+    [alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
+    alert.informativeText = @"";
     alert.type = kGIAlertType_Note;
     [alert runModal];
   }

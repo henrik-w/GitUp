@@ -526,7 +526,7 @@ static CFDataRef _MessagePortCallBack(CFMessagePortRef local, SInt32 msgid, CFDa
 
 - (IBAction)showAboutPanel:(id)sender {
 #if DEBUG
-  _versionTextField.stringValue = @"DEBUG";
+  _versionTextField.stringValue = NSLocalizedString(@"DEBUG", nil);
 #else
   if (_updatePending) {
     _versionTextField.stringValue = NSLocalizedString(@"Update Pending", nil);

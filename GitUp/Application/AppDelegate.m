@@ -187,7 +187,7 @@
   }
 }
 
-- (void)_setDocumentWindowModeID:(NSArray*)arguments {
+- (void)_setDocumentWindowModeID:(NSArray<NSNumber *>*)arguments {
   [(Document*)arguments[0] setWindowModeID:[arguments[1] unsignedIntegerValue]];
 }
 
@@ -468,7 +468,7 @@ static CFDataRef _MessagePortCallBack(CFMessagePortRef local, SInt32 msgid, CFDa
   return CFBridgingRetain([NSKeyedArchiver archivedDataWithRootObject:output]);
 }
 
-- (NSDictionary*)_processToolCommand:(NSDictionary*)input {
+- (NSDictionary*)_processToolCommand:(NSDictionary<NSString*, NSString*>*)input {
   NSString* command = [input objectForKey:kToolDictionaryKey_Command];
   NSString* repository = [[input objectForKey:kToolDictionaryKey_Repository] stringByStandardizingPath];
   if (!command.length || !repository.length) {

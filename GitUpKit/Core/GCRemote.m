@@ -251,7 +251,7 @@ cleanup:
   CFMutableDictionaryRef remoteReferences = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &keyCallbacks, &valueCallbacks);
 
   // Build list of remote branches matching this remote's refspecs (excluding symbolic ones)
-  if (![self enumerateReferencesWithOptions:0
+  if ([self enumerateReferencesWithOptions:0
                                       error:error
                                  usingBlock:^BOOL(git_reference* reference) {
                                    const char* name = git_reference_name(reference);
@@ -268,64 +268,66 @@ cleanup:
                                      }
                                    }
                                    return YES;
-                                 }]) {
-    goto cleanup;
-  }
-
-  // Build list of branches on remotes filtered by remote refspecs (excluding symbolic ones)
-  if ([self _transfer:GIT_DIRECTION_FETCH withRemote:remote.private refspecs:NULL count:0 tagMode:kGCFetchTagMode_None prune:NO error:error] == NSNotFound) {
-    goto cleanup;
-  }
-  const git_remote_head** headList;
-  size_t headCount;
-  CALL_LIBGIT2_FUNCTION_GOTO(cleanup, git_remote_ls, &headList, &headCount, remote.private);
-  for (size_t i = 0; i < headCount; ++i) {
-    const git_remote_head* head = headList[i];
-    if (((options & kGCRemoteCheckOption_IncludeBranches) && git_reference__is_branch(head->name)) ||
-        ((options & kGCRemoteCheckOption_IncludeTags) && git_reference__is_tag(head->name))) {
-      if (!head->symref_target) {
-        for (size_t j = 0; j < git_remote_refspec_count(remote.private); ++j) {
-          const git_refspec* refspec = git_remote_get_refspec(remote.private, j);
-          if ((git_refspec_direction(refspec) == GIT_DIRECTION_FETCH) && git_refspec_src_matches(refspec, head->name)) {
-            git_buf buffer = {0};
-            CALL_LIBGIT2_FUNCTION_GOTO(cleanup, git_refspec_transform, &buffer, refspec, head->name);
-            CFDictionarySetValue(remoteReferences, buffer.ptr, &head->oid);
-            git_buf_free(&buffer);
+                                 }])
+  {
+    // Build list of branches on remotes filtered by remote refspecs (excluding symbolic ones)
+    if ([self _transfer:GIT_DIRECTION_FETCH withRemote:remote.private refspecs:NULL count:0 tagMode:kGCFetchTagMode_None prune:NO error:error] != NSNotFound) {
+      const git_remote_head** headList;
+      size_t headCount;
+      CALL_LIBGIT2_FUNCTION_GOTO(cleanup, git_remote_ls, &headList, &headCount, remote.private);
+      for (size_t i = 0; i < headCount; ++i) {
+        const git_remote_head* head = headList[i];
+        if (((options & kGCRemoteCheckOption_IncludeBranches) && git_reference__is_branch(head->name)) ||
+            ((options & kGCRemoteCheckOption_IncludeTags) && git_reference__is_tag(head->name))) {
+          if (!head->symref_target) {
+            for (size_t j = 0; j < git_remote_refspec_count(remote.private); ++j) {
+              const git_refspec* refspec = git_remote_get_refspec(remote.private, j);
+              if ((git_refspec_direction(refspec) == GIT_DIRECTION_FETCH) && git_refspec_src_matches(refspec, head->name)) {
+                git_buf buffer = {0};
+                CALL_LIBGIT2_FUNCTION_GOTO(cleanup, git_refspec_transform, &buffer, refspec, head->name);
+                CFDictionarySetValue(remoteReferences, buffer.ptr, &head->oid);
+                git_buf_free(&buffer);
+              }
+            }
           }
         }
       }
-    }
-  }
 
-  // Compare lists
-  if (addedReferences) {
-    *addedReferences = [[NSMutableDictionary alloc] init];
-  }
-  if (modifiedReferences) {
-    *modifiedReferences = [[NSMutableDictionary alloc] init];
-  }
-  if (deletedReferences) {
-    *deletedReferences = [[NSMutableDictionary alloc] init];
-  }
-  GCDictionaryApplyBlock(remoteReferences, ^(const void* key, const void* value) {
-    const char* name = key;
-    const git_oid* remoteOID = value;
-    const git_oid* localOID = CFDictionaryGetValue(localReferences, name);
-    if (!localOID) {
-      [(NSMutableDictionary*)*addedReferences setObject:GCGitOIDToSHA1(remoteOID) forKey:[NSString stringWithUTF8String:name]];  // Reference is in remote but not in repository
-    } else {
-      if (git_oid_cmp(localOID, remoteOID)) {
-        [(NSMutableDictionary*)*modifiedReferences setObject:GCGitOIDToSHA1(remoteOID) forKey:[NSString stringWithUTF8String:name]];  // Reference is in remote and repository but with different targets
+      // Compare lists
+      NSMutableDictionary* collectedAddedReferences = addedReferences? [NSMutableDictionary dictionary] : nil;
+      NSMutableDictionary* collectedModifiedReferences = modifiedReferences? [NSMutableDictionary dictionary] : nil;
+      GCDictionaryApplyBlock(remoteReferences, ^(const void* key, const void* value) {
+        const char* name = key;
+        const git_oid* remoteOID = value;
+        const git_oid* localOID = CFDictionaryGetValue(localReferences, name);
+        if (collectedAddedReferences && !localOID) {
+          [collectedAddedReferences setObject:GCGitOIDToSHA1(remoteOID) forKey:[NSString stringWithUTF8String:name]];  // Reference is in remote but not in repository
+        } else {
+          if (collectedModifiedReferences && git_oid_cmp(localOID, remoteOID)) {
+            [collectedModifiedReferences setObject:GCGitOIDToSHA1(remoteOID) forKey:[NSString stringWithUTF8String:name]];  // Reference is in remote and repository but with different targets
+          }
+          CFDictionaryRemoveValue(localReferences, name);
+        }
+      });
+      if (addedReferences) {
+        *addedReferences = collectedAddedReferences;
       }
-      CFDictionaryRemoveValue(localReferences, name);
+      if (modifiedReferences) {
+        *modifiedReferences = collectedModifiedReferences;
+      }
+
+      NSMutableDictionary* collectedDeletedReferences = deletedReferences? [NSMutableDictionary dictionary] : nil;
+      GCDictionaryApplyBlock(localReferences, ^(const void* key, const void* value) {
+        const char* name = key;
+        const git_oid* localOID = value;
+        [collectedDeletedReferences setObject:GCGitOIDToSHA1(localOID) forKey:[NSString stringWithUTF8String:name]];  // Reference is not in remote anymore but still in repository
+      });
+      if (deletedReferences) {
+        *deletedReferences = collectedDeletedReferences;
+      }
+      success = YES;
     }
-  });
-  GCDictionaryApplyBlock(localReferences, ^(const void* key, const void* value) {
-    const char* name = key;
-    const git_oid* localOID = value;
-    [(NSMutableDictionary*)*deletedReferences setObject:GCGitOIDToSHA1(localOID) forKey:[NSString stringWithUTF8String:name]];  // Reference is not in remote anymore but still in repository
-  });
-  success = YES;
+  }
 
 cleanup:
   CFRelease(remoteReferences);
@@ -535,17 +537,19 @@ static BOOL _SetBranchDefaultUpstream(git_repository* repository, git_remote* re
   if (![self _pushAllReferencesToRemote:remote.private branches:YES tags:NO force:force error:error]) {
     return NO;
   }
-  if (setUpstream && ![self enumerateReferencesWithOptions:0
-                                                     error:error
-                                                usingBlock:^BOOL(git_reference* reference) {
-                                                  if (git_reference_is_branch(reference) && !_SetBranchDefaultUpstream(self.private, remote.private, reference, error)) {
-                                                    return NO;
-                                                  }
-                                                  return YES;
-                                                }]) {
-    return NO;
+  __block NSError* e = nil;
+  BOOL success = !(setUpstream && ![self enumerateReferencesWithOptions:0
+                                                                 error:error
+                                                            usingBlock:^BOOL(git_reference* reference) {
+                                                              if (git_reference_is_branch(reference) && !_SetBranchDefaultUpstream(self.private, remote.private, reference, &e)) {
+                                                                return NO;
+                                                              }
+                                                              return YES;
+                                                            }]);
+  if (nil != error) {
+    *error = e;
   }
-  return YES;
+  return success;
 }
 
 // Use the same "default" behavior as Git i.e push to tags with the same names on the remote

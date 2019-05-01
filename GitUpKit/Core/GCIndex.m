@@ -527,6 +527,7 @@ cleanup:
   patch = [self makePatchForDiffDelta:diff.deltas[0] isBinary:NULL error:error];
   if (patch) {
     __block BOOL failed = NO;
+    __block NSError* e = nil;
     [patch enumerateUsingBeginHunkHandler:NULL
                               lineHandler:^(GCLineDiffChange change, NSUInteger oldLineNumber, NSUInteger newLineNumber, const char* contentBytes, NSUInteger contentLength) {
                                 /* Comparing workdir to index:
@@ -554,13 +555,16 @@ cleanup:
                                     break;
                                 }
                                 if (shouldWrite && (write(fd, contentBytes, contentLength) != (ssize_t)contentLength)) {
-                                  GC_SET_GENERIC_ERROR(@"%s", strerror(errno));
+                                  e = GCNewError(kGCErrorCode_Generic, [NSString stringWithFormat:@"%s", strerror(errno)]);
                                   failed = YES;
                                   XLOG_DEBUG_UNREACHABLE();
                                 }
                               }
                            endHunkHandler:NULL];
     if (failed) {
+      if (nil != error) {
+        *error = e;
+      }
       goto cleanup;
     }
   } else {

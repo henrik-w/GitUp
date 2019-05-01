@@ -168,6 +168,8 @@ typedef NS_ENUM(NSUInteger, ReplayMode) {
     CFDictionarySetValue(mapping, (__bridge const void*)commit, (__bridge const void*)initialMapping[commit]);
   }
   __block BOOL success = YES;
+
+  __block NSError* e = nil;
   [self walkDescendantsOfCommits:@[ fromCommit ]
                       usingBlock:^(GCHistoryCommit* commit, BOOL* stop) {
                         if ([self isCommitOnAnyLocalBranch:commit]) {
@@ -192,14 +194,15 @@ typedef NS_ENUM(NSUInteger, ReplayMode) {
                               }
                             }
                           }
-                          GCCommit* newCommit;
+
+                          GCCommit* newCommit = nil;
                           if (replayMode == kReplayMode_CopyTrees) {
                             newCommit = [self.repository copyCommit:commit
                                                  withUpdatedMessage:nil
                                                      updatedParents:parents
                                                updatedTreeFromIndex:nil
                                                     updateCommitter:YES
-                                                              error:error];
+                                                              error:&e];
                           } else {
                             newCommit = [self.repository replayCommit:commit
                                                            ontoCommit:tipCommit
@@ -209,7 +212,7 @@ typedef NS_ENUM(NSUInteger, ReplayMode) {
                                                       updateCommitter:YES
                                                         skipIdentical:(replayMode == kReplayMode_ApplyNewPatchesOnly)
                                                       conflictHandler:handler
-                                                                error:error];
+                                                                error:&e];
                           }
                           if (newCommit == nil) {
                             success = NO;
@@ -222,6 +225,9 @@ typedef NS_ENUM(NSUInteger, ReplayMode) {
                           XLOG_DEBUG(@"Skipping replay of commit \"%@\" (%@) not on local branch", commit.summary, commit.shortSHA1);
                         }
                       }];
+  if (nil != error) {
+    *error = e;
+  }
   CFRelease(mapping);
   return success;
 }

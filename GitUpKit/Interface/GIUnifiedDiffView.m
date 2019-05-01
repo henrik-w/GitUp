@@ -403,33 +403,36 @@ typedef struct {
     }
     if (_selectedLines.count) {
       XLOG_DEBUG_CHECK(!_selectedText.length);
-      *text = [[NSMutableString alloc] init];
+      NSMutableString *textBuffer = [NSMutableString string];
       [_selectedLines enumerateIndexesUsingBlock:^(NSUInteger index, BOOL* stop) {
         const LineInfo* info = &_lineInfoList[index];
-        if ((NSUInteger)info->change != NSNotFound) {
-          [(NSMutableString*)*text appendString:[(NSString*)CFAttributedStringGetString(_string) substringWithRange:NSMakeRange(info->range.location, info->range.length)]];
+        if (info->change != NSNotFound) {
+          [textBuffer appendString:[(NSString*)CFAttributedStringGetString(_string) substringWithRange:NSMakeRange(info->range.location, info->range.length)]];
         }
       }];
+      *text = textBuffer;
     }
   }
-  if (oldLines) {
-    *oldLines = [NSMutableIndexSet indexSet];
-  }
-  if (newLines) {
-    *newLines = [NSMutableIndexSet indexSet];
-  }
   if (oldLines || newLines) {
+    NSMutableIndexSet *foundOldLines = oldLines? [NSMutableIndexSet indexSet] : nil;
+    NSMutableIndexSet *foundNewLines = newLines? [NSMutableIndexSet indexSet] : nil;
     [_selectedLines enumerateIndexesUsingBlock:^(NSUInteger index, BOOL* stop) {
       const LineInfo* info = &_lineInfoList[index];
       if ((NSUInteger)info->change != NSNotFound) {
-        if (oldLines && (info->oldLineNumber != NSNotFound)) {
-          [(NSMutableIndexSet*)*oldLines addIndex:info->oldLineNumber];
+        if (foundOldLines && (info->oldLineNumber != NSNotFound)) {
+          [foundOldLines addIndex:info->oldLineNumber];
         }
-        if (newLines && (info->newLineNumber != NSNotFound)) {
-          [(NSMutableIndexSet*)*newLines addIndex:info->newLineNumber];
+        if (foundNewLines && (info->newLineNumber != NSNotFound)) {
+          [foundNewLines addIndex:info->newLineNumber];
         }
       }
     }];
+    if (oldLines) {
+      *oldLines = foundOldLines;
+    }
+    if (newLines) {
+      *newLines = foundNewLines;
+    }
   }
 }
 

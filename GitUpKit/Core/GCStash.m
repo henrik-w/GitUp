@@ -135,15 +135,19 @@ cleanup:
 
 - (NSArray*)listStashes:(NSError**)error {
   NSMutableArray* array = [[NSMutableArray alloc] init];
+  __block NSError* e = nil;
   CALL_LIBGIT2_FUNCTION_RETURN(nil, git_stash_foreach_block, self.private, ^int(size_t index, const char* message, const git_oid* stash_id) {
     XLOG_DEBUG_CHECK(array.count == index);
-    GCStash* stash = [self _newStashFromOID:stash_id error:error];
+    GCStash* stash = [self _newStashFromOID:stash_id error:&e];
     if (stash == nil) {
       return GIT_ERROR;
     }
     [array addObject:stash];
     return GIT_OK;
   });
+  if (nil != error) {
+    *error = e;
+  }
   return array;
 }
 

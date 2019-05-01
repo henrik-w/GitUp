@@ -241,7 +241,8 @@ static void _ReleaseCallBack(CFAllocatorRef allocator, const void* value) {
   void (^skipBlock)(BOOL) = ^(BOOL updateTips) {
     while (1) {
       // Iterate over commits from list
-      GC_POINTER_LIST_FOR_LOOP(skipList, GCHistoryCommit*, commit) {
+      for (size_t i = 0; i < skipList.count; ++i) {
+        GCHistoryCommit* commit = skipList.pointers[i];
         for (GCHistoryCommit* parent in commit.parents) {
           // Check if commit was already skipped
           if (skipped[parent.autoIncrementID]) {

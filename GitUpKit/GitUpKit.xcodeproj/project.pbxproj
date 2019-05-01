@@ -12,6 +12,10 @@
 		749786941B85AAB10065BD55 /* GCOrderedSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 74EDB5D11B84D4C400F00E79 /* GCOrderedSet.m */; };
 		74EDB5D61B84E06500F00E79 /* GCOrderedSet-Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74EDB5D51B84E06500F00E79 /* GCOrderedSet-Tests.m */; };
 		74EDB5D71B8517F500F00E79 /* GCOrderedSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 74EDB5D11B84D4C400F00E79 /* GCOrderedSet.m */; };
+		AF3F532122748D4E00AD1514 /* XLDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = AF3F531F22748D4E00AD1514 /* XLDatabaseLogger.h */; };
+		AF3F532222748D4E00AD1514 /* XLDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = AF3F531F22748D4E00AD1514 /* XLDatabaseLogger.h */; };
+		AF3F532322748D4E00AD1514 /* XLDatabaseLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = AF3F532022748D4E00AD1514 /* XLDatabaseLogger.m */; };
+		AF3F532422748D4E00AD1514 /* XLDatabaseLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = AF3F532022748D4E00AD1514 /* XLDatabaseLogger.m */; };
 		E200A3BA1B02DDA100C4E39D /* GCPrivate.m in Sources */ = {isa = PBXBuildFile; fileRef = E200A3B81B02DDA100C4E39D /* GCPrivate.m */; };
 		E20EB08C19FC75CA0031A075 /* GCRepository+Reset.m in Sources */ = {isa = PBXBuildFile; fileRef = E20EB08A19FC75CA0031A075 /* GCRepository+Reset.m */; };
 		E20EB09019FC76160031A075 /* GCRepository+Status.m in Sources */ = {isa = PBXBuildFile; fileRef = E20EB08E19FC76160031A075 /* GCRepository+Status.m */; };
@@ -31,7 +35,6 @@
 		E217533E1B91623200BE234A /* XLLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = E267E2BA1B84F27800BAB377 /* XLLogger.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		E217533F1B91623200BE234A /* XLLogRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = E267E2BC1B84F27800BAB377 /* XLLogRecord.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		E21753401B91623200BE234A /* XLStandardLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = E267E2BE1B84F27800BAB377 /* XLStandardLogger.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		E21753411B91623200BE234A /* XLDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = E267E2C11B84F27800BAB377 /* XLDatabaseLogger.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		E21753421B91626B00BE234A /* GCBranch.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C338DB19F85C8600063D95 /* GCBranch.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E21753431B91626B00BE234A /* GCCommit.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C338DD19F85C8600063D95 /* GCCommit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E21753441B91626B00BE234A /* GCCommitDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = E2FEED441AEAA6AD00CBED80 /* GCCommitDatabase.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -106,7 +109,6 @@
 		E21753961B91684300BE234A /* XLLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2BB1B84F27800BAB377 /* XLLogger.m */; };
 		E21753971B91684300BE234A /* XLLogRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2BD1B84F27800BAB377 /* XLLogRecord.m */; };
 		E21753981B91684300BE234A /* XLStandardLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2BF1B84F27800BAB377 /* XLStandardLogger.m */; };
-		E21753991B91684300BE234A /* XLDatabaseLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2C21B84F27800BAB377 /* XLDatabaseLogger.m */; };
 		E21753F81B916C0C00BE234A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2B14B561A88102C00003E64 /* Security.framework */; };
 		E218A58B1A566F6A00DFF1DF /* GCReferenceTransform.m in Sources */ = {isa = PBXBuildFile; fileRef = E218A5891A566F6A00DFF1DF /* GCReferenceTransform.m */; };
 		E218A58F1A56706600DFF1DF /* GCRepository+Utilities.m in Sources */ = {isa = PBXBuildFile; fileRef = E218A58D1A56706600DFF1DF /* GCRepository+Utilities.m */; };
@@ -301,7 +303,6 @@
 		E267E2D21B84F29F00BAB377 /* XLLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = E267E2BA1B84F27800BAB377 /* XLLogger.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		E267E2D31B84F29F00BAB377 /* XLLogRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = E267E2BC1B84F27800BAB377 /* XLLogRecord.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		E267E2D41B84F29F00BAB377 /* XLStandardLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = E267E2BE1B84F27800BAB377 /* XLStandardLogger.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		E267E2D51B84F29F00BAB377 /* XLDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = E267E2C11B84F27800BAB377 /* XLDatabaseLogger.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		E267E2D61B84F2BE00BAB377 /* XLASLLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2AE1B84F27800BAB377 /* XLASLLogger.m */; };
 		E267E2D71B84F2BE00BAB377 /* XLCallbackLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2B01B84F27800BAB377 /* XLCallbackLogger.m */; };
 		E267E2D81B84F2BE00BAB377 /* XLFacility.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2B21B84F27800BAB377 /* XLFacility.m */; };
@@ -310,7 +311,6 @@
 		E267E2DB1B84F2BE00BAB377 /* XLLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2BB1B84F27800BAB377 /* XLLogger.m */; };
 		E267E2DC1B84F2BE00BAB377 /* XLLogRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2BD1B84F27800BAB377 /* XLLogRecord.m */; };
 		E267E2DD1B84F2BE00BAB377 /* XLStandardLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2BF1B84F27800BAB377 /* XLStandardLogger.m */; };
-		E267E2DE1B84F2BE00BAB377 /* XLDatabaseLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2C21B84F27800BAB377 /* XLDatabaseLogger.m */; };
 		E267E2DF1B84F32000BAB377 /* XLFacility.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2B21B84F27800BAB377 /* XLFacility.m */; };
 		E267E2E01B84F33000BAB377 /* XLFunctions.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2B91B84F27800BAB377 /* XLFunctions.m */; };
 		E267E2E11B84F33300BAB377 /* XLStandardLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E267E2BF1B84F27800BAB377 /* XLStandardLogger.m */; };
@@ -419,6 +419,8 @@
 		74EDB5D01B84D4C400F00E79 /* GCOrderedSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCOrderedSet.h; sourceTree = "<group>"; };
 		74EDB5D11B84D4C400F00E79 /* GCOrderedSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCOrderedSet.m; sourceTree = "<group>"; };
 		74EDB5D51B84E06500F00E79 /* GCOrderedSet-Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GCOrderedSet-Tests.m"; sourceTree = "<group>"; };
+		AF3F531F22748D4E00AD1514 /* XLDatabaseLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XLDatabaseLogger.h; sourceTree = "<group>"; };
+		AF3F532022748D4E00AD1514 /* XLDatabaseLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XLDatabaseLogger.m; sourceTree = "<group>"; };
 		E200A3B81B02DDA100C4E39D /* GCPrivate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCPrivate.m; sourceTree = "<group>"; };
 		E20EB08919FC75CA0031A075 /* GCRepository+Reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GCRepository+Reset.h"; sourceTree = "<group>"; };
 		E20EB08A19FC75CA0031A075 /* GCRepository+Reset.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GCRepository+Reset.m"; sourceTree = "<group>"; };
@@ -545,8 +547,6 @@
 		E267E2BD1B84F27800BAB377 /* XLLogRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XLLogRecord.m; sourceTree = "<group>"; };
 		E267E2BE1B84F27800BAB377 /* XLStandardLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XLStandardLogger.h; sourceTree = "<group>"; };
 		E267E2BF1B84F27800BAB377 /* XLStandardLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XLStandardLogger.m; sourceTree = "<group>"; };
-		E267E2C11B84F27800BAB377 /* XLDatabaseLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XLDatabaseLogger.h; sourceTree = "<group>"; };
-		E267E2C21B84F27800BAB377 /* XLDatabaseLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XLDatabaseLogger.m; sourceTree = "<group>"; };
 		E2790D401ACB1B1100965A98 /* GCFoundation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCFoundation.h; sourceTree = "<group>"; };
 		E2790D411ACB1B1100965A98 /* GCFoundation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCFoundation.m; sourceTree = "<group>"; };
 		E2790D441ACF12E200965A98 /* GCRepository+Index-Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GCRepository+Index-Tests.m"; sourceTree = "<group>"; };
@@ -809,6 +809,8 @@
 		E267E2AC1B84F27800BAB377 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				AF3F531F22748D4E00AD1514 /* XLDatabaseLogger.h */,
+				AF3F532022748D4E00AD1514 /* XLDatabaseLogger.m */,
 				E267E2AD1B84F27800BAB377 /* XLASLLogger.h */,
 				E267E2AE1B84F27800BAB377 /* XLASLLogger.m */,
 				E267E2AF1B84F27800BAB377 /* XLCallbackLogger.h */,
@@ -830,15 +832,6 @@
 				E267E2BF1B84F27800BAB377 /* XLStandardLogger.m */,
 			);
 			path = Core;
-			sourceTree = "<group>";
-		};
-		E267E2C01B84F27800BAB377 /* Extensions */ = {
-			isa = PBXGroup;
-			children = (
-				E267E2C11B84F27800BAB377 /* XLDatabaseLogger.h */,
-				E267E2C21B84F27800BAB377 /* XLDatabaseLogger.m */,
-			);
-			path = Extensions;
 			sourceTree = "<group>";
 		};
 		E2735B2119FF763300ED0CC4 /* Extensions */ = {
@@ -993,7 +986,6 @@
 			isa = PBXGroup;
 			children = (
 				E267E2AC1B84F27800BAB377 /* Core */,
-				E267E2C01B84F27800BAB377 /* Extensions */,
 			);
 			name = XLFacility;
 			path = "Third-Party/XLFacility/XLFacility";
@@ -1073,6 +1065,7 @@
 				E21753621B9162B600BE234A /* GCRepository+Utilities.h in Headers */,
 				E21753601B9162B600BE234A /* GCHistory+Rewrite.h in Headers */,
 				E26CDF261B9B86250050C920 /* GCOrderedSet.h in Headers */,
+				AF3F532222748D4E00AD1514 /* XLDatabaseLogger.h in Headers */,
 				E2B987961B9172470097629D /* GIBranch.h in Headers */,
 				E2B987971B9172470097629D /* GIConstants.h in Headers */,
 				E2B987981B9172470097629D /* GIFunctions.h in Headers */,
@@ -1091,7 +1084,6 @@
 				E217533E1B91623200BE234A /* XLLogger.h in Headers */,
 				E217533F1B91623200BE234A /* XLLogRecord.h in Headers */,
 				E21753401B91623200BE234A /* XLStandardLogger.h in Headers */,
-				E21753411B91623200BE234A /* XLDatabaseLogger.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1150,6 +1142,7 @@
 				E267E2231B84DBE700BAB377 /* GIColorView.h in Headers */,
 				E267E2241B84DBE700BAB377 /* GILinkButton.h in Headers */,
 				E267E2251B84DBE700BAB377 /* GIModalView.h in Headers */,
+				AF3F532122748D4E00AD1514 /* XLDatabaseLogger.h in Headers */,
 				E267E2261B84DBE700BAB377 /* GIViewController.h in Headers */,
 				E267E2271B84DBE700BAB377 /* GIViewController+Utilities.h in Headers */,
 				E267E2281B84DBE700BAB377 /* GIWindowController.h in Headers */,
@@ -1180,7 +1173,6 @@
 				E267E2D21B84F29F00BAB377 /* XLLogger.h in Headers */,
 				E267E2D31B84F29F00BAB377 /* XLLogRecord.h in Headers */,
 				E267E2D41B84F29F00BAB377 /* XLStandardLogger.h in Headers */,
-				E267E2D51B84F29F00BAB377 /* XLDatabaseLogger.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1413,6 +1405,7 @@
 				E2B987921B9171D20097629D /* GILayer.m in Sources */,
 				E2B987931B9171D20097629D /* GILine.m in Sources */,
 				E2B987941B9171D20097629D /* GINode.m in Sources */,
+				AF3F532422748D4E00AD1514 /* XLDatabaseLogger.m in Sources */,
 				E2B987951B9171D20097629D /* GIPrivate.m in Sources */,
 				E21753911B91684300BE234A /* XLASLLogger.m in Sources */,
 				E21753921B91684300BE234A /* XLCallbackLogger.m in Sources */,
@@ -1422,7 +1415,6 @@
 				E21753961B91684300BE234A /* XLLogger.m in Sources */,
 				E21753971B91684300BE234A /* XLLogRecord.m in Sources */,
 				E21753981B91684300BE234A /* XLStandardLogger.m in Sources */,
-				E21753991B91684300BE234A /* XLDatabaseLogger.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1442,6 +1434,7 @@
 				E267E1DA1B84D83100BAB377 /* GCObject.m in Sources */,
 				749786941B85AAB10065BD55 /* GCOrderedSet.m in Sources */,
 				E267E1DB1B84D83100BAB377 /* GCPrivate.m in Sources */,
+				AF3F532322748D4E00AD1514 /* XLDatabaseLogger.m in Sources */,
 				E267E1DC1B84D83100BAB377 /* GCReference.m in Sources */,
 				E267E1DD1B84D83100BAB377 /* GCReferenceTransform.m in Sources */,
 				E267E1DF1B84D83100BAB377 /* GCRemote.m in Sources */,
@@ -1504,7 +1497,6 @@
 				E267E2DB1B84F2BE00BAB377 /* XLLogger.m in Sources */,
 				E267E2DC1B84F2BE00BAB377 /* XLLogRecord.m in Sources */,
 				E267E2DD1B84F2BE00BAB377 /* XLStandardLogger.m in Sources */,
-				E267E2DE1B84F2BE00BAB377 /* XLDatabaseLogger.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1847,6 +1839,35 @@
 					"Third-Party/libsqlite3/$(PLATFORM_NAME)/lib/libsqlite3.a",
 					"Third-Party/libssl/$(PLATFORM_NAME)/lib/libcrypto.a",
 					"Third-Party/libssh2/$(PLATFORM_NAME)/lib/libssh2.a",
+				);
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Weverything",
+					"-Wshadow",
+					"-Wshorten-64-to-32",
+					"-Wbool-conversion",
+					"-Wconstant-conversion",
+					"-Wundeclared-selector",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-direct-ivar-access",
+					"-Wno-documentation-unknown-command",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-implicit-retain-self",
+					"-Wno-explicit-ownership-type",
+					"-Wno-assign-enum",
+					"-Wno-cast-align",
+					"-Wno-switch-enum",
+					"-Wno-gnu-statement-expression",
+					"-Wno-cstring-format-directive",
+					"-Wno-cast-qual",
+					"-Wno-nullable-to-nonnull-conversion",
+					"-Wno-reserved-id-macro",
+					"-Wno-nonnull",
+					"-Wno-property-attribute-mismatch",
+					"-Wno-double-promotion",
+					"-Wno-unguarded-availability",
+					"-Wno-objc-messaging-id",
 				);
 			};
 			name = Debug;

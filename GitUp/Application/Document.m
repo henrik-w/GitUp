@@ -120,7 +120,7 @@ static inline WindowModeID _WindowModeIDFromString(NSString* mode) {
   BOOL _searchReady;
   BOOL _preventSelectionLoopback;
   NSResponder* _savedFirstResponder;
-  id _lastHEADBranch;
+  GCHistoryLocalBranch* _lastHEADBranch;
   BOOL _checkingForChanges;
   CFRunLoopTimerRef _checkTimer;
   NSDictionary* _updatedReferences;
@@ -419,7 +419,7 @@ static void _CheckTimerCallBack(CFRunLoopTimerRef timer, void* info) {
 - (void)canCloseDocumentWithDelegate:(id)delegate shouldCloseSelector:(SEL)shouldCloseSelector contextInfo:(void*)contextInfo {
   if (![self shouldCloseDocument]) {
     typedef void (*CallbackIMP)(id, SEL, NSDocument*, BOOL, void*);
-    CallbackIMP callback = (CallbackIMP)[delegate methodForSelector:shouldCloseSelector];
+    CallbackIMP callback = (CallbackIMP)[(NSObject *)delegate methodForSelector:shouldCloseSelector];
     callback(delegate, shouldCloseSelector, self, NO, contextInfo);
   } else {
     [super canCloseDocumentWithDelegate:delegate shouldCloseSelector:shouldCloseSelector contextInfo:contextInfo];
@@ -474,7 +474,7 @@ static void _CheckTimerCallBack(CFRunLoopTimerRef timer, void* info) {
   NSUInteger totalCount = _repository.history.allCommits.count;
   __block float lastProgress = 0.0;
   __block CFTimeInterval lastTime = 0.0;
-  [_repository prepareSearchInBackground:[[_repository userInfoForKey:kRepositoryUserInfoKey_IndexDiffs] boolValue]
+  [_repository prepareSearchInBackground:[(NSNumber*)[_repository userInfoForKey:kRepositoryUserInfoKey_IndexDiffs] boolValue]
       withProgressHandler:^BOOL(BOOL firstUpdate, NSUInteger addedCommits, NSUInteger removedCommits) {
         if (firstUpdate) {
           float progress = MIN(roundf(1000 * (float)addedCommits / (float)totalCount) / 10, 100.0);
@@ -535,7 +535,7 @@ static void _CheckTimerCallBack(CFRunLoopTimerRef timer, void* info) {
   [self _prepareSearch];
 
   // Check for uninitialized submodules
-  if (!restored && ![[_repository userInfoForKey:kRepositoryUserInfoKey_SkipSubmoduleCheck] boolValue]) {
+  if (!restored && ![(NSNumber*)[_repository userInfoForKey:kRepositoryUserInfoKey_SkipSubmoduleCheck] boolValue]) {
     NSError* error;
     if (![_repository checkAllSubmodulesInitialized:YES error:&error]) {
       if ([error.domain isEqualToString:GCErrorDomain] && (error.code == kGCErrorCode_SubmoduleUninitialized)) {
@@ -1384,15 +1384,15 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
     [self commitListViewControllerDidChangeSelection:nil];
   }
 
-  id headBranch = _repository.history.HEADBranch;
-  if (headBranch == nil) {
-    headBranch = [NSNull null];
+  GCHistoryLocalBranch* headBranch = _repository.history.HEADBranch;
+  if (nil == headBranch) {
+    headBranch = (GCHistoryLocalBranch*)[NSNull null];
   }
   if (![_lastHEADBranch isEqual:headBranch]) {
     if (!_helpHEADDisabled) {
       if ([headBranch isKindOfClass:[GCHistoryLocalBranch class]]) {
         [_windowController showOverlayWithStyle:kGIOverlayStyle_Informational format:NSLocalizedString(@"You are now on branch \"%@\"", nil), [headBranch name]];
-      } else if (headBranch == [NSNull null]) {
+      } else if (headBranch == (GCHistoryLocalBranch*)[NSNull null]) {
         [_windowController showOverlayWithStyle:kGIOverlayStyle_Informational message:NSLocalizedString(@"You are not on any branch anymore", nil)];
       }
     }
@@ -1668,7 +1668,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
 }
 
 - (IBAction)switchMode:(id)sender {
-  if ([sender isKindOfClass:[NSMenuItem class]]) {
+  if ([(NSObject*)sender isKindOfClass:[NSMenuItem class]]) {
     [self _setWindowMode:_WindowModeStringFromID([(NSMenuItem*)sender tag])];
   } else {
     [self _setWindowMode:_WindowModeStringFromID(_modeControl.selectedSegment)];
@@ -1972,7 +1972,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
 }
 
 - (IBAction)editSettings:(id)sender {
-  _indexDiffsButton.state = [[_repository userInfoForKey:kRepositoryUserInfoKey_IndexDiffs] boolValue];
+  _indexDiffsButton.state = [(NSNumber*)[_repository userInfoForKey:kRepositoryUserInfoKey_IndexDiffs] boolValue];
 
   [NSApp beginSheet:_settingsWindow modalForWindow:_mainWindow modalDelegate:nil didEndSelector:NULL contextInfo:NULL];
 }

@@ -273,7 +273,7 @@
 - (void)_updatePreferencePanel {
   NSString* channel = [[NSUserDefaults standardUserDefaults] stringForKey:kUserDefaultsKey_ReleaseChannel];
   for (NSMenuItem* item in _channelPopUpButton.menu.itemArray) {
-    if ([item.representedObject isEqualToString:channel]) {
+    if ([(NSString*)item.representedObject isEqualToString:channel]) {
       [_channelPopUpButton selectItem:item];
       break;
     }

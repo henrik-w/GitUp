@@ -1835,6 +1835,7 @@
 					"Third-Party/libsqlite3/$(PLATFORM_NAME)/include",
 					"Third-Party/libssh2/$(PLATFORM_NAME)/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"Third-Party/libsqlite3/$(PLATFORM_NAME)/lib/libsqlite3.a",
 					"Third-Party/libssl/$(PLATFORM_NAME)/lib/libcrypto.a",
@@ -1904,6 +1905,7 @@
 					"Third-Party/libsqlite3/$(PLATFORM_NAME)/include",
 					"Third-Party/libssh2/$(PLATFORM_NAME)/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_LDFLAGS = (
 					"Third-Party/libsqlite3/$(PLATFORM_NAME)/lib/libsqlite3.a",
 					"Third-Party/libssl/$(PLATFORM_NAME)/lib/libcrypto.a",

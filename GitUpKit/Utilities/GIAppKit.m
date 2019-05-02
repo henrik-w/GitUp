@@ -53,6 +53,14 @@ static NSColor* _separatorColor = nil;
 
 @implementation NSAlert (GIAppKit)
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_9
+
+- (void)beginSheetModalForWindow:(NSWindow*)window withCompletionHandler:(void (^)(NSModalResponse returnCode))handler {
+  [self beginSheetModalForWindow:window completionHandler:handler];
+}
+
+#else
+
 + (void)_alertDidEnd:(NSAlert*)alert returnCode:(NSInteger)returnCode contextInfo:(void*)contextInfo {
   void (^handler)(NSInteger) = contextInfo ? CFBridgingRelease(contextInfo) : NULL;
   [alert.window orderOut:nil];  // Dismiss the alert window before the handler might chain another one
@@ -64,6 +72,8 @@ static NSColor* _separatorColor = nil;
 - (void)beginSheetModalForWindow:(NSWindow*)window withCompletionHandler:(void (^)(NSInteger returnCode))handler {
   [self beginSheetModalForWindow:window modalDelegate:[NSAlert class] didEndSelector:@selector(_alertDidEnd:returnCode:contextInfo:) contextInfo:(handler ? (void*)CFBridgingRetain(handler) : NULL)];
 }
+
+#endif
 
 - (void)setType:(GIAlertType)type {
   switch (type) {

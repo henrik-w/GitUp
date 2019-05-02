@@ -216,7 +216,7 @@ static void _CheckTimerCallBack(CFRunLoopTimerRef timer, void* info) {
       }
     } else {
 #if DEBUG
-      if ([NSEvent modifierFlags] & NSAlternateKeyMask) {
+      if ([NSEvent modifierFlags] & NSEventModifierFlagOption) {
         [[NSFileManager defaultManager] removeItemAtPath:_repository.privateAppDirectoryPath error:NULL];
         XLOG_WARNING(@"Resetting private data for repository \"%@\"", _repository.repositoryPath);
       }
@@ -274,7 +274,7 @@ static void _CheckTimerCallBack(CFRunLoopTimerRef timer, void* info) {
 - (void)windowControllerDidLoadNib:(NSWindowController*)windowController {
   CGFloat fontSize = _infoTextField2.font.pointSize;
   NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
-  style.alignment = NSCenterTextAlignment;
+  style.alignment = NSTextAlignmentCenter;
   _stateAttributes = @{NSParagraphStyleAttributeName : style, NSForegroundColorAttributeName : [NSColor redColor], NSFontAttributeName : [NSFont boldSystemFontOfSize:fontSize]};
 
   NSString* frameString = [_repository userInfoForKey:kRepositoryUserInfoKey_MainWindowFrame];
@@ -403,11 +403,10 @@ static void _CheckTimerCallBack(CFRunLoopTimerRef timer, void* info) {
   }
 
   if ([error.domain isEqualToString:GCErrorDomain] && (error.code == -1) && [error.localizedDescription isEqualToString:@"authentication required but no callback set"]) {  // TODO: Avoid hardcoding libgit2 error
-    NSAlert* alert = [NSAlert alertWithMessageText:NSLocalizedString(@"Unable to authenticate with remote!", nil)
-                                     defaultButton:NSLocalizedString(@"OK", nil)
-                                   alternateButton:nil
-                                       otherButton:nil
-                         informativeTextWithFormat:NSLocalizedString(@"If using an SSH remote, make sure you have added your key to the ssh-agent, then try again.", nil)];
+    NSAlert* alert = [[NSAlert alloc] init];
+    alert.messageText = NSLocalizedString(@"Unable to authenticate with remote!", nil);
+    alert.informativeText = NSLocalizedString(@"If using an SSH remote, make sure you have added your key to the ssh-agent, then try again.", nil);
+    [alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
     alert.type = kGIAlertType_Stop;
     [alert beginSheetModalForWindow:_mainWindow withCompletionHandler:NULL];
     return NO;
@@ -539,15 +538,19 @@ static void _CheckTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     NSError* error;
     if (![_repository checkAllSubmodulesInitialized:YES error:&error]) {
       if ([error.domain isEqualToString:GCErrorDomain] && (error.code == kGCErrorCode_SubmoduleUninitialized)) {
-        NSAlert* alert = [NSAlert alertWithMessageText:NSLocalizedString(@"Do you want to initialize submodules?", nil) defaultButton:NSLocalizedString(@"Initialize", nil) alternateButton:NSLocalizedString(@"Cancel", nil) otherButton:nil informativeTextWithFormat:@"One or more submodules in this repository are uninitialized."];
+        NSAlert* alert = [[NSAlert alloc] init];
+        alert.messageText = NSLocalizedString(@"Do you want to initialize submodules?", nil);
+        alert.informativeText = NSLocalizedString(@"One or more submodules in this repository are uninitialized.", nil);
+        [alert addButtonWithTitle:NSLocalizedString(@"Initialize", nil)];
+        [alert addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
         alert.type = kGIAlertType_Caution;
         alert.showsSuppressionButton = YES;
         [alert beginSheetModalForWindow:_mainWindow
-                  withCompletionHandler:^(NSInteger returnCode) {
+                  withCompletionHandler:^(NSModalResponse returnCode) {
                     if (alert.suppressionButton.state) {
                       [_repository setUserInfo:@(YES) forKey:kRepositoryUserInfoKey_SkipSubmoduleCheck];
                     }
-                    if (returnCode == NSAlertDefaultReturn) {
+                    if (returnCode == NSAlertFirstButtonReturn) {
                       [self _initializeSubmodules];
                     }
                   }];
@@ -644,7 +647,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
         [string appendString:branch.name withAttributes:@{NSFontAttributeName : [NSFont boldSystemFontOfSize:fontSize]}];
         [string appendString:NSLocalizedString(@" • tracking upstream ", nil) withAttributes:@{NSFontAttributeName : [NSFont systemFontOfSize:fontSize]}];
         [string appendString:upstream.name withAttributes:@{NSFontAttributeName : [NSFont boldSystemFontOfSize:fontSize]}];
-        [string setAlignment:NSCenterTextAlignment range:NSMakeRange(0, string.length)];
+        [string setAlignment:NSTextAlignmentCenter range:NSMakeRange(0, string.length)];
         [string endEditing];
         _infoTextField1.attributedStringValue = string;
 
@@ -689,7 +692,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
         [string beginEditing];
         [string appendString:NSLocalizedString(@"On branch ", nil) withAttributes:@{NSFontAttributeName : [NSFont systemFontOfSize:fontSize]}];
         [string appendString:branch.name withAttributes:@{NSFontAttributeName : [NSFont boldSystemFontOfSize:fontSize]}];
-        [string setAlignment:NSCenterTextAlignment range:NSMakeRange(0, string.length)];
+        [string setAlignment:NSTextAlignmentCenter range:NSMakeRange(0, string.length)];
         [string endEditing];
         _infoTextField1.attributedStringValue = string;
 
@@ -860,13 +863,13 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
     return NO;
   }
   if (_indexing) {
-    NSAlert* alert = [NSAlert alertWithMessageText:NSLocalizedString(@"Are you sure you want to close the repository?", nil)
-                                     defaultButton:NSLocalizedString(@"Close", nil)
-                                   alternateButton:NSLocalizedString(@"Cancel", nil)
-                                       otherButton:nil
-                         informativeTextWithFormat:NSLocalizedString(@"The repository \"%@\" is still being prepared for search. This can take up to a few minutes for large repositories.", nil), self.displayName];
+    NSAlert* alert = [[NSAlert alloc] init];
+    alert.messageText = NSLocalizedString(@"Are you sure you want to close the repository?", nil);
+    alert.informativeText = [NSString stringWithFormat:NSLocalizedString(@"The repository \"%@\" is still being prepared for search. This can take up to a few minutes for large repositories.", nil), self.displayName];
+    [alert addButtonWithTitle:NSLocalizedString(@"Close", nil)];
+    [alert addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
     alert.type = kGIAlertType_Caution;
-    if ([alert runModal] == NSAlertAlternateReturn) {
+    if ([alert runModal] == NSAlertSecondButtonReturn) {
       return NO;
     }
     _abortIndexing = YES;
@@ -1304,7 +1307,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
         if (_searchView.superview) {
           GCHistoryCommit* commit = _searchResultsViewController.selectedCommit;
           if (commit) {
-            if (event.modifierFlags & NSAlternateKeyMask) {
+            if (event.modifierFlags & NSEventModifierFlagOption) {
               [_mapViewController launchDiffToolWithCommit:commit otherCommit:commit.parents.firstObject];  // Use main-line
             } else {
               [self _enterQuickViewWithHistoryCommit:commit commitList:_searchResultsViewController.commits];
@@ -1314,7 +1317,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
         } else if (_tagsView.superview) {
           GCHistoryCommit* commit = _tagsViewController.selectedCommit;
           if (commit) {
-            if (event.modifierFlags & NSAlternateKeyMask) {
+            if (event.modifierFlags & NSEventModifierFlagOption) {
               [_mapViewController launchDiffToolWithCommit:commit otherCommit:commit.parents.firstObject];  // Use main-line
             } else {
               [self _enterQuickViewWithHistoryCommit:commit commitList:_tagsViewController.commits];
@@ -1322,7 +1325,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
             handled = YES;
           }
         } else if (_reflogView.superview) {
-          if (event.modifierFlags & NSAlternateKeyMask) {
+          if (event.modifierFlags & NSEventModifierFlagOption) {
             [_windowController showOverlayWithStyle:kGIOverlayStyle_Help message:NSLocalizedString(@"External Diff is not available for reflog entries", nil)];
           } else {
             [_windowController showOverlayWithStyle:kGIOverlayStyle_Help message:NSLocalizedString(@"Quick View is not available for reflog entries", nil)];
@@ -1331,7 +1334,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
         } else if (_ancestorsView.superview) {
           GCHistoryCommit* commit = _ancestorsViewController.selectedCommit;
           if (commit) {
-            if (event.modifierFlags & NSAlternateKeyMask) {
+            if (event.modifierFlags & NSEventModifierFlagOption) {
               [_mapViewController launchDiffToolWithCommit:commit otherCommit:commit.parents.firstObject];  // Use main-line
             } else {
               [self _enterQuickViewWithHistoryCommit:commit commitList:_ancestorsViewController.commits];
@@ -1544,7 +1547,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
   // TODO: Is re-entering NSApp's event loop really AppKit-safe (it appears to partially break NSAnimationContext animations for instance)?
   _resolvingConflicts = 0;
   while (!_resolvingConflicts) {
-    NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate distantFuture] inMode:NSModalPanelRunLoopMode dequeue:YES];
+    NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantFuture] inMode:NSModalPanelRunLoopMode dequeue:YES];
     [NSApp sendEvent:event];
   }
 
@@ -1624,7 +1627,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
     if ([_windowMode isEqualToString:kWindowModeString_Map_QuickView] || [_windowMode isEqualToString:kWindowModeString_Map_Diff] || [_windowMode isEqualToString:kWindowModeString_Map_Rewrite] || [_windowMode isEqualToString:kWindowModeString_Map_Config] || [_windowMode isEqualToString:kWindowModeString_Map_Resolve]) {
       return NO;
     }
-    [(NSMenuItem*)item setState:([(NSMenuItem*)item tag] == _WindowModeIDFromString(_windowMode) ? NSOnState : NSOffState)];
+    [(NSMenuItem*)item setState:([(NSMenuItem*)item tag] == _WindowModeIDFromString(_windowMode) ? NSControlStateValueOn : NSControlStateValueOff)];
     return YES;
   }
 
@@ -1647,7 +1650,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
 }
 
 - (IBAction)resetHard:(id)sender {
-  _untrackedButton.state = NSOffState;
+  _untrackedButton.state = NSControlStateValueOff;
   NSAlert* alert = [[NSAlert alloc] init];
   alert.type = kGIAlertType_Stop;
   alert.messageText = NSLocalizedString(@"Are you sure you want to reset the index and working directory to the current checkout?", nil);
@@ -1974,7 +1977,7 @@ static NSString* _StringFromRepositoryState(GCRepositoryState state) {
 - (IBAction)editSettings:(id)sender {
   _indexDiffsButton.state = [(NSNumber*)[_repository userInfoForKey:kRepositoryUserInfoKey_IndexDiffs] boolValue];
 
-  [NSApp beginSheet:_settingsWindow modalForWindow:_mainWindow modalDelegate:nil didEndSelector:NULL contextInfo:NULL];
+  [_mainWindow beginSheet:_settingsWindow completionHandler:NULL];
 }
 
 - (IBAction)saveSettings:(id)sender {

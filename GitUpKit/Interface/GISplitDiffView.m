@@ -77,6 +77,22 @@ typedef NS_ENUM(NSUInteger, SelectionMode) {
   }
 }
 
+- (void)setLeftLine:(CTLineRef)line {
+  CTLineRef oldLineRef = _leftLine;
+  _leftLine = (line)? CFRetain(line) : NULL;
+  if (oldLineRef) {
+    CFRelease(oldLineRef);
+  }
+}
+
+- (void)rightLine:(CTLineRef)line {
+  CTLineRef oldLineRef = _rightLine;
+  _rightLine = (line)? CFRetain(line) : NULL;
+  if (oldLineRef) {
+    CFRelease(oldLineRef);
+  }
+}
+
 - (NSString*)description {
   switch (_type) {
     case kDiffLineType_Separator:
@@ -184,6 +200,7 @@ typedef NS_ENUM(NSUInteger, SelectionMode) {
       CFAttributedStringRef attributedString = CFAttributedStringCreate(kCFAllocatorDefault, (CFStringRef)string, GIDiffViewAttributes);
       CTLineRef line = CTLineCreateWithAttributedString(attributedString);
       CFRelease(attributedString);
+      CFAutorelease(line);
 
       GISplitDiffLine* diffLine = [[GISplitDiffLine alloc] initWithType:kDiffLineType_Separator];
       diffLine.leftString = string;
@@ -235,6 +252,7 @@ typedef NS_ENUM(NSUInteger, SelectionMode) {
           do {
             CFIndex index = CTTypesetterSuggestLineBreak(typeSetter, offset, lineWidth);
             CTLineRef line = CTTypesetterCreateLine(typeSetter, CFRangeMake(offset, index));
+            CFAutorelease(line);
             switch (change) {  // Assume the order of repeating changes is always [unmodified -> deleted -> added -> unmodified]
 
               case kGCLineDiffChange_Unmodified: {
@@ -242,11 +260,11 @@ typedef NS_ENUM(NSUInteger, SelectionMode) {
                 [_lines addObject:diffLine];
                 diffLine.leftNumber = oldLineNumber;
                 diffLine.leftString = string;
-                diffLine.leftLine = line;  // Transfer ownership to GISplitDiffLine
+                diffLine.leftLine = line;
                 diffLine.leftWrapped = isWrappedLine;
                 diffLine.rightNumber = newLineNumber;
                 diffLine.rightString = string;
-                diffLine.rightLine = CFRetain(line);  // Transfer ownership to GISplitDiffLine
+                diffLine.rightLine = line;
                 diffLine.rightWrapped = isWrappedLine;
                 lineIndex = NSNotFound;
                 break;
